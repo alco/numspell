@@ -1,8 +1,9 @@
-"""English rules and tables for the 'spell' module"""
+"""English rules and tables for the 'spellnum' module"""
 
 RULES = [
     'ab = {a0}-{b}',
-    'axx = {a} hundred {x}'
+    'axx = {a} hundred {x}',
+    '(a)xxx = {a} {x}'
 ]
 
 NUMBERS = {
