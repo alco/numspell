@@ -26,51 +26,54 @@ class Speller(object):
         order -- specifies the power of 1000 which is appended to the number
 
         """
-        result = self._parse_num(num)
-        for m in re.finditer('(\d)\s+(\d\s+)*\d', result):
+
+        result = self._parse_num(str(num))
+
+        # Squash all sequences of ints separated by whitespace leaving only the
+        # leftmost number in the sequence.
+        for m in re.finditer(r'(\d)\s+(\d\s+)*\d', result):
             result = result[:m.start()] + m.group(1) + result[m.end():]
-        for m in re.finditer('\d', result):
+
+        # Substitute order names in place of the remaining ints.
+        for m in re.finditer(r'\d', result):
             result = result.replace(m.group(0), self.ORDERS[int(m.group(0))])
+
         return result
 
-    def _parse_num(self, num, order=None):
-        num = int(num)  # a simple guard to prevent possible mischief
+    def _parse_num(self, numstr, order=None):
+        num = int(numstr)
         if num == 0:
             if order is None:
                 return self.NUMBERS[num]
             return ""
 
         order = order or 0  # convert None to 0
-        numstr = str(num)
 
         if num in self.NUMBERS:
-            spelling = self.NUMBERS[num]
+            result = self.NUMBERS[num]
         else:
-            matching_rule = _first_match(numstr, self.RULES)
-            assert(matching_rule)  # _first_match must throw exception if no rule has matched
-            mapping = _pattern_match(matching_rule.pattern, numstr, order)
-            spelling = self._expand_body(matching_rule, mapping).rstrip()
+            rule = _first_match(numstr, self.RULES)
+            mapping = _pattern_match(rule.pattern, numstr, order)
+            result = _expand_body(rule.body, mapping, self._parse_num).rstrip()
 
-        if spelling:
-            return (spelling + " " + str(order or self.ORDERS[order])).rstrip()
-
-    def _expand_body(self, rule, mapping):
-        """Produce a spelling given a rule and a mapping of its vars"""
-        #print mapping
-        result = rule.body
-        for raw_token in re.findall('{.+?}', rule.body):
-            token = raw_token[1:-1]
-            order = None
-            for char in token:
-                subst = mapping.get(char, char)
-                if type(subst) == list:
-                    order = subst[1]
-                    subst = subst[0]
-                token = token.replace(char, str(subst))
-            result = result.replace(raw_token, self._parse_num(token, order or 0))
-        #print result
+        if order:
+            return (result + " " + str(order))
         return result
 
+
+def _expand_body(body, mapping, callback):
+    """Produce a spelling given a rule and a mapping of its vars"""
+    result = body
+    for raw_token in re.findall(r'{.+?}', body):
+        token = raw_token[1:-1]
+        order = 0
+        for char in token:
+            subst = mapping.get(char, char)
+            if type(subst) == list:
+                subst, order = subst
+            token = token.replace(char, str(subst))
+        result = result.replace(raw_token, callback(token, order))
+    return result
 
 def _first_match(numstr, rules):
     """Find the first matching rule for the given number
@@ -86,7 +89,6 @@ def _first_match(numstr, rules):
 
          * it has the same number of characters (variables or digits) as the
            number has digits
-
          * each of the its digits (if it has any) has to match exactly with the
            corresponding digits of the number
 
@@ -103,6 +105,8 @@ def _first_match(numstr, rules):
     """
     for rule in ifilter(lambda rule: rule.matches(numstr), rules):
         return rule
+
+    raise Exception('Caould not find a suitable rule for the number %s' % numstr)
 
 def _pattern_match(pattern, numstr, order):
     """Return a mapping for variables given the numstr"""
