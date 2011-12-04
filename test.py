@@ -1,6 +1,4 @@
-import os
 import unittest
-
 import spellnum
 
 answers_upto_100 = {
