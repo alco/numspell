@@ -34,7 +34,7 @@ class Speller(object):
 
         """
 
-        if num == 0:
+        if int(num) == 0:
             return self.NUMBERS[0]
 
         result = self._parse_num(str(num))
