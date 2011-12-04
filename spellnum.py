@@ -7,8 +7,9 @@ from itertools import ifilter
 class Speller(object):
     """The class which performs spelling numbers"""
 
-    def __init__(self, lang="en",
-                 rules=None, number_table=None, order_table=None):
+    def __init__(self, lang="en", rules=None,
+                 number_table=None, order_table=None,
+                 order_separator=None):
         """Initialize the Speller instance with language code and other options
 
         lang -- language code in the ISO 639-1 format
@@ -18,6 +19,12 @@ class Speller(object):
         self.RULES = [_Rule(x) for x in (rules or module.RULES)]
         self.NUMBERS = number_table or module.NUMBERS
         self.ORDERS = order_table or module.ORDERS
+        if order_separator:
+            self.ORDER_SEP = order_separator
+        elif hasattr(module, 'ORDER_SEP'):
+            self.ORDER_SEP = module.ORDER_SEP
+        else:
+            self.ORDER_SEP = " "
 
     def spell(self, num):
         """Return the spelling of the given integer
@@ -34,7 +41,7 @@ class Speller(object):
 
         # Squash all sequences of ints separated by whitespace leaving only the
         # leftmost number in the sequence.
-        for m in re.finditer(r'(\d)\s+(\d\s+)*\d', result):
+        for m in re.finditer(r'(\d)\s*(\d\s+)*\d', result):
             result = result[:m.start()] + m.group(1) + result[m.end():]
 
         # Substitute order names in place of the remaining ints.
@@ -55,7 +62,7 @@ class Speller(object):
             result = _expand_body(rule.body, mapping, self._parse_num).rstrip()
 
         if order:
-            return (result + " " + str(order))
+            return (result + self.ORDER_SEP + str(order))
         return result
 
 
