@@ -157,11 +157,19 @@ class _Rule(object):
 # END OF MODULE
 
 
-def _main_cli():
-    import sys
-
+def _main_cli(args):
     speller = Speller()
-    print '*%s*' % speller.spell(sys.argv[1])
+    print speller.spell(args[0])
+
+def _main_test():
+    import subprocess
+
+    subprocess.call(['python', 'test.py'])
 
 if __name__ == '__main__':
-    _main_cli()
+    import sys
+
+    if len(sys.argv) == 1 or sys.argv[1] == '-t':
+        _main_test()
+    else:
+        _main_cli(sys.argv[1:])
