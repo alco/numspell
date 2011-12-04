@@ -19,14 +19,21 @@ class Speller(object):
         self.NUMBERS = number_table or module.NUMBERS
         self.ORDERS = order_table or module.ORDERS
 
-    def spell(self, num, order=None):
+    def spell(self, num):
         """Return the spelling of the given integer
 
         num   -- the number to spell
         order -- specifies the power of 1000 which is appended to the number
 
         """
+        result = self._parse_num(num)
+        for m in re.finditer('(\d)\s+(\d\s+)*\d', result):
+            result = result[:m.start()] + m.group(1) + result[m.end():]
+        for m in re.finditer('\d', result):
+            result = result.replace(m.group(0), self.ORDERS[int(m.group(0))])
+        return result
 
+    def _parse_num(self, num, order=None):
         num = int(num)  # a simple guard to prevent possible mischief
         if num == 0:
             if order is None:
@@ -45,13 +52,13 @@ class Speller(object):
             spelling = self._expand_body(matching_rule, mapping).rstrip()
 
         if spelling:
-            return (spelling + " " + self.ORDERS[order]).rstrip()
+            return (spelling + " " + str(order or self.ORDERS[order])).rstrip()
 
     def _expand_body(self, rule, mapping):
         """Produce a spelling given a rule and a mapping of its vars"""
         #print mapping
         result = rule.body
-        for raw_token in re.findall('\{.+?\}', rule.body):
+        for raw_token in re.findall('{.+?}', rule.body):
             token = raw_token[1:-1]
             order = None
             for char in token:
@@ -60,7 +67,7 @@ class Speller(object):
                     order = subst[1]
                     subst = subst[0]
                 token = token.replace(char, str(subst))
-            result = result.replace(raw_token, self.spell(token, order or 0))
+            result = result.replace(raw_token, self._parse_num(token, order or 0))
         #print result
         return result
 
