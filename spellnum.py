@@ -27,6 +27,9 @@ class Speller(object):
 
         """
 
+        if num == 0:
+            return self.NUMBERS[0]
+
         result = self._parse_num(str(num))
 
         # Squash all sequences of ints separated by whitespace leaving only the
@@ -40,15 +43,10 @@ class Speller(object):
 
         return result
 
-    def _parse_num(self, numstr, order=None):
+    def _parse_num(self, numstr, order=0):
         num = int(numstr)
         if num == 0:
-            if order is None:
-                return self.NUMBERS[num]
             return ""
-
-        order = order or 0  # convert None to 0
-
         if num in self.NUMBERS:
             result = self.NUMBERS[num]
         else:
