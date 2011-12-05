@@ -140,7 +140,7 @@ spanish_infinity = OrderedDict({
     1989: 'mil novecientos ochenta y nueve',
     2000: 'dos mil',
     3000: 'tres mil',
-    7456: 'mil trescientos cuarenta y cinco',
+    7456: 'siete mil cuatrocientos cincuenta y seis',
     10000: 'diez mil',
     10567: 'diez mil quinientas sesenta y siete',
     13000: 'trece mil',
