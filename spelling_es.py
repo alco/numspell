@@ -28,7 +28,7 @@ NUMBERS = {
     18: 'dieciocho',
     19: 'diecinueve',
     20: 'veinte',
-    21: 'ventiuno',
+    21: 'veintiuno',
     22: 'veintidós',
     23: 'veintitrés',
     24: 'veinticuatro',
@@ -48,7 +48,7 @@ NUMBERS = {
     200: 'doscientos',
     300: 'trescientos',
     400: 'cuatrocientos',
-    500: 'quiniencos',
+    500: 'quinientos',
     600: 'seiscientos',
     700: 'setecientos',
     800: 'ochocientos',
@@ -56,8 +56,8 @@ NUMBERS = {
 }
 
 ORDERS = [
-    '', 'mil', 'millón', 'billón', 'trillón', 'quadrillón',
-    'quintillion', 'sextillion', 'septillion', 'octillion', 'nonillion',
-    'decillion', 'undecillion', 'duodecillion', 'tredecillion',
-    'quattuordecillion', 'quindecillion'
+    '', 'mil', 'millón', 'billón', 'trillón', 'cuatrillón',
+    'quintillón', 'sextillón', 'septillón', 'octillón', 'nonillón',
+    'decillón', 'undecillón', 'duodecillón', 'tredecillón',
+    'cuatordecillón', 'quindecillón'
 ]
