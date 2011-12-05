@@ -140,7 +140,7 @@ spanish_infinity = {
     3000: 'tres mil',
     7456: 'siete mil cuatrocientos cincuenta y seis',
     10000: 'diez mil',
-    10567: 'diez mil quinientas sesenta y siete',
+    10567: 'diez mil quinientos sesenta y siete',
     13000: 'trece mil',
     20933: 'veinte mil novecientos treinta y tres',
     30000: 'treinta mil',
