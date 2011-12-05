@@ -3,7 +3,10 @@
 
 RULES = [
     'ab = {a0} y {b}',
-    'axx = {a00} {x}'
+    'axx = {a00} {x}',
+    '(a)xxx = {a} {x}'
+#    '*',
+#    '1xxx = mil {x}',
 ]
 
 NUMBERS = {
