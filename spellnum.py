@@ -34,7 +34,7 @@ class Speller(object):
 
         """
 
-        if int(num) == 0:
+        if num == 0:
             return self.NUMBERS[0]
 
         result = self._parse_num(str(num))
@@ -164,7 +164,7 @@ class _Rule(object):
 
 def _main_cli(args):
     speller = Speller()
-    print speller.spell(args[0])
+    print speller.spell(int(args[0]))
 
 def _main_test():
     import subprocess
