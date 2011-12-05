@@ -4,7 +4,11 @@
 RULES = [
     'ab = {a0} y {b}',
     'axx = {a00} {x}',
-    '(a)xxx = {a} {x}'
+    '1xxx = mil {x}',
+    'axxx = {a} mil {x}',
+    'aaxxx = {a} mil {x}',
+    'aaaxxx = {a} mil {x}',
+    '(a)xxxxxx = {a} {x}',
 #    '*',
 #    '1xxx = mil {x}',
 ]
@@ -59,7 +63,7 @@ NUMBERS = {
 }
 
 ORDERS = [
-    '', 'mil', 'millón', 'billón', 'trillón', 'cuatrillón',
+    '', 'millón', 'billón', 'trillón', 'cuatrillón',
     'quintillón', 'sextillón', 'septillón', 'octillón', 'nonillón',
     'decillón', 'undecillón', 'duodecillón', 'tredecillón',
     'cuatordecillón', 'quindecillón'
