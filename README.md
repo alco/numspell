@@ -1,3 +1,19 @@
+DISCLAIMER
+==========
+
+_This document is written by applying the concept of 'wishful thinking'. In
+other words, it describes the desired functionality which is **NOT** implemented
+yet._
+
+_If you find it confusing, take a look at this short and very nicely written
+introduction to_ [Readme Driven Development][1] _by_ Tom Preston-Werner, _its
+author and evangelist._
+
+_As soon as the contents of this README reflects the actual functionality that
+is available to the end user, this disclaimer will disappear._
+
+  [1]: http://tom.preston-werner.com/2010/08/23/readme-driven-development.html
+
 spellnum
 ========
 
@@ -5,8 +21,8 @@ A Python module for spelling numbers.
 
 ## User Dimension
 
-From the user's point of view, **spellnum** can be used as a command-line
-utility or it can be used as module by `import`ing it in your own code.
+From the user's point of view, **spellnum** can be used either as a command-line
+utility or as a module by `import`ing it in your own Python code.
 
 ### Command-Line Interface
 
