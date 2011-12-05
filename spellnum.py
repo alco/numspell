@@ -162,19 +162,25 @@ class _Rule(object):
 # END OF MODULE
 
 
-def _main_cli(args):
-    speller = Speller()
-    print speller.spell(int(args[0]))
-
-def _main_test():
+def _run_tests():
     import subprocess
-
     subprocess.call(['python', 'test.py'])
 
-if __name__ == '__main__':
-    import sys
+def _main_cli():
+    import argparse
 
-    if len(sys.argv) == 1 or sys.argv[1] == '-t':
-        _main_test()
-    else:
-        _main_cli(sys.argv[1:])
+    parser = argparse.ArgumentParser(description='Spell integers in various languages')
+    parser.add_argument('num', metavar='number', nargs='?', type=int, help="an integer to spell")
+    parser.add_argument('--lang', '-l', type=str, default='en', help="language code in ISO 639-1 format")
+    parser.add_argument('--test', '-t', action='store_const', const=True, default=False, help="run unit-tests and exit")
+    args = parser.parse_args()
+
+    if args.test or not args.num:
+        _run_tests()
+        return
+
+    speller = Speller(args.lang)
+    print speller.spell(args.num)
+
+if __name__ == '__main__':
+    _main_cli()
