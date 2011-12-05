@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-from collections import OrderedDict
-
 import spellnum
 
 english_100 = {
@@ -54,7 +52,7 @@ english_1000 = {
     999: 'nine hundred ninety-nine'
 }
 
-english_infinity = OrderedDict({
+english_infinity = {
     1000: 'one thousand',
     2000: 'two thousand',
     3000: 'three thousand',
@@ -76,7 +74,7 @@ english_infinity = OrderedDict({
     143007000: 'one hundred forty-three million seven thousand',
     2408701047: 'two billion four hundred eight million seven hundred one thousand forty-seven',
     10680040002031: 'ten trillion six hundred eighty billion forty million two thousand thirty-one'
-})
+}
 
 spanish_100 = {
     0: 'cero',
@@ -130,7 +128,7 @@ spanish_1000 = {
     999: 'novecientos noventa y nueve'
 }
 
-spanish_infinity = OrderedDict({
+spanish_infinity = {
     1000: 'mil',
     1001: 'mil uno',
     1010: 'mil diez',
@@ -168,11 +166,11 @@ spanish_infinity = OrderedDict({
     10000000000: 'diez mil millones',
     100000000000: 'cien mil millones',
     1000000000000: 'billón',
-})
+}
 
 class SharedTest(unittest.TestCase):
     def _run_test(self, answers):
-        for num, spelling in answers.items():
+        for num, spelling in sorted(answers.items()):
             self.assertEqual(spelling, self.speller.spell(num))
 
 class EnglishTest(SharedTest):
