@@ -45,20 +45,18 @@ Positional arguments:
 Optional arguments:
 
   -h, --help
-      show this help message and exit.
+      Show this help message and exit.
 
   -d, --debug
       Print all of the steps taken to produce the spelling for a given number.
       Useful for debugging purposes and to get to know the algorithm behind
       the process.
 
-  -l LANG, --lang=LANG
-      Language code in ISO 639-1 format.
+  --lang=LANG
+      Language code in ISO 639-1 format. Default: en.
 
       Specify the language to spell with or to use when checking the user-
       provided spelling (see the --check option below).
-
-      Default: en.
 
       Currently supported languages:
         de (German)
@@ -79,6 +77,53 @@ Optional arguments:
 ```
 
 
-### Modulde API
+### Module API
+
+The API for the Python module **spellnum** is very straightforward. It can be
+explained with this simple example:
+
+```python
+import spellnum
+
+# The language is passed to the Speller class constructor.
+gentleman = spellnum.Speller('en')
+
+# Pass an integer to the 'spell' method
+# and it will return a string with the spelling.
+assert(gentleman.spell(1300) == 'one thousand three hundred')
+assert(gentleman.spell(10700010) == 'ten million seven hundred thousand ten')
+
+# Here we use the 'es' language code to spell some numbers in Spanish
+torero = spellnum.Speller('es')
+assert(torero.spell(1989) == 'mil novecientos ochenta y nueve')
+
+# spellnum can also check and correct your spelling.
+#
+# The 'check' method returns a string with correct spelling if the spelling
+# provided by the user is wrong.
+#
+# It returns None otherwise.
+assert(torero.check(10007, 'diez mil siete') is None)
+assert(torero.check(1, 'dos') == 'uno')
+```
+
+This example is taken from the _example.py_ script in the root directory of the
+project. You can actually run it yourself to make sure that all of the
+assertions hold true.
+
+If you're looking for a more detailed description of the **spellnum** module
+API, take a look at its help:
+
+```
+$ python
+>>> import spellnum
+>>> help(spellnum)
+```
+
+If, however, you would like to dive deeper and find out how you can add support
+for a new spelling language, port the spelling algorithm to another programming
+language or contribute to the project in some other way, please read on.
 
 ## Developer Dimension
+
+...
