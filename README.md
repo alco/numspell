@@ -114,11 +114,9 @@ assertions hold true.
 If you're looking for a more detailed description of the **spellnum** module
 API, take a look at its help:
 
-```
-$ python
->>> import spellnum
->>> help(spellnum)
-```
+    $ python
+    >>> import spellnum
+    >>> help(spellnum)
 
 If, however, you would like to dive deeper and find out how you can add support
 for a new spelling language, port the spelling algorithm to another programming
@@ -158,9 +156,9 @@ of Spanish language. **Two million** is spelled **dos millones** in Spanish. So,
 Spanish millions, billions, etc. change their grammatical number, unlike English
 ones. In Russian they have even more variations:
 
-    1 million -> 1 миллион
-    2 million -> 2 миллиона
-    5 million -> 5 миллионов
+    1 million → 1 миллион
+    2 million → 2 миллиона
+    5 million → 5 миллионов
 
 So, what is the best way to design an algorithm that could be flexible enough to
 acommodate numerous variations of different human languages yet be simple enough
