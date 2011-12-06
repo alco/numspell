@@ -162,9 +162,11 @@ The answer to the question above is reflected in the two basic principles that
 form the foundation of this project:
 
 1. The project is highly modularized allowing a programmer to chain multiple
-modules together in order to get the desired processing sequence.  2. For each
-human language there is a set of rules (rather than a separate algorithm)
-defining the way any given number should be spelled out in that language.
+modules together in order to get the desired processing sequence.
+
+2. For each human language there is a set of rules (rather than a separate
+algorithm) defining the way any given number should be spelled out in that
+language.
 
 So, broadly speaking, there is a single algorithm used to generate spelling for
 every supported human language. There may be one or two extensions to the
