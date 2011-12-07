@@ -7,6 +7,7 @@ RULES = [
     '1xxx = mil {x}',
     'axxx = {a} mil {x}',
     'aaxxx = {a} mil {x}',
+    '100xxx = cien mil {x}',
     'aaaxxx = {a} mil {x}',
     '(a)xxxxxx = {a} {x}',
 #    '*',
