@@ -53,6 +53,7 @@ NUMBERS = {
     80: 'ochenta',
     90: 'noventa',
     100: 'ciento',
+    101: 'ciento uno',
     200: 'doscientos',
     300: 'trescientos',
     400: 'cuatrocientos',
@@ -69,3 +70,10 @@ ORDERS = [
     'decillón', 'undecillón', 'duodecillón', 'tredecillón',
     'cuatordecillón', 'quindecillón'
 ]
+
+PREORDERS = {
+    1: 'un',
+    21: 'veintiún',
+    101: 'cientoún',
+    100: 'cien',
+}
