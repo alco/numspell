@@ -26,6 +26,11 @@ class Speller(object):
         else:
             self.ORDER_SEP = " "
 
+        if hasattr(module, 'PREORDERS'):
+            self.PREORDERS = module.PREORDERS
+        else:
+            self.PREORDERS = {}
+
     def spell(self, num):
         """Return the spelling of the given integer
 
@@ -37,16 +42,36 @@ class Speller(object):
         if num == 0:
             return self.NUMBERS[0]
 
-        result = self._parse_num(str(num))
+        tokens = self._parse_num(str(num))
+        parts = []
 
-        # Squash all sequences of ints separated by whitespace leaving only the
-        # leftmost number in the sequence.
-        for m in re.finditer(r'(\d)\s*(\d\s+)*\d', result):
-            result = result[:m.start()] + m.group(1) + result[m.end():]
+        isnum = lambda x: type(x) is str and x.isdigit()
+        isorder = lambda x: type(x) is int
 
-        # Substitute order names in place of the remaining ints.
-        for m in re.finditer(r'\d', result):
-            result = result.replace(m.group(0), self.ORDERS[int(m.group(0))])
+        last_significant_thing = None
+        for (i, token) in enumerate(tokens):
+            part = None
+            if isnum(token):
+                part = self.NUMBERS[int(token)]
+                last_significant_thing = token
+            elif isorder(token):
+                if not isorder(last_significant_thing):
+                    if i > 0 and isnum(tokens[i-1]):
+                        if int(tokens[i-1]) in self.PREORDERS:
+                            parts[i-1] = self.PREORDERS[int(tokens[i-1])]
+                        sep = self.ORDER_SEP
+                    else:
+                        sep = ''
+                    part = sep + self.ORDERS[token]
+                    last_significant_thing = token
+            else:
+                part = token
+            if part:
+                parts.append(part)
+
+        result = ''.join(parts).rstrip()
+        print tokens
+        print parts
 
         return result
 
@@ -54,30 +79,44 @@ class Speller(object):
         num = int(numstr)
         if num == 0:
             return ""
+
         if num in self.NUMBERS:
-            result = self.NUMBERS[num]
+            result = [numstr]
         else:
             rule = _first_match(numstr, self.RULES)
             mapping = _pattern_match(rule.pattern, numstr, order)
-            result = _expand_body(rule.body, mapping, self._parse_num).rstrip()
+            result = _expand_body(rule.body, mapping, self._parse_num)
 
-        if order:
-            return (result + self.ORDER_SEP + str(order))
-        return result
-
+        return result + (order and [order] or [])
 
 def _expand_body(body, mapping, callback):
     """Produce a spelling given a rule and a mapping of its vars"""
-    result = body
-    for raw_token in re.findall(r'{.+?}', body):
-        token = raw_token[1:-1]
+    print mapping
+    body = body.replace('}', '!}')
+
+    result = []
+    for item in body.split('{'):
+        result.extend(item.split('}'))
+    result = filter(bool, result)
+
+    for raw_token in filter(lambda x: x.find('!') > 0, result):
+        token = raw_token[:-1]
         order = 0
         for char in token:
             subst = mapping.get(char, char)
-            if type(subst) == list:
+            if type(subst) is list:
                 subst, order = subst
             token = token.replace(char, str(subst))
-        result = result.replace(raw_token, callback(token, order))
+        index = result.index(raw_token)
+        spelling = callback(token, order)
+        if spelling:
+            print result
+            print spelling
+            print '***'
+            result = result[:index] + spelling + result[index+1:]
+        else:
+            result.pop(index)
+
     return result
 
 def _first_match(numstr, rules):
@@ -180,7 +219,7 @@ def _main_cli():
         return
 
     speller = Speller(args.lang)
-    print speller.spell(args.num)
+    print '*%s*' % speller.spell(args.num)
 
 if __name__ == '__main__':
     _main_cli()
