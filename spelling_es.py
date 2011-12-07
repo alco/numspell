@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Spanish rules and tables for the 'spell' module"""
+"""Spanish rules and tables for the spellnum module"""
 
 RULES = [
     'ab = {a0} y {b}',
@@ -9,9 +9,8 @@ RULES = [
     'aaxxx = {a} mil {x}',
     '100xxx = cien mil {x}',
     'aaaxxx = {a} mil {x}',
+##  'a--xxx = {a} mil {x}
     '(a)xxxxxx = {a} {x}',
-#    '*',
-#    '1xxx = mil {x}',
 ]
 
 NUMBERS = {
@@ -65,7 +64,8 @@ NUMBERS = {
 }
 
 ORDERS = [
-    '', 'millón', 'billón', 'trillón', 'cuatrillón',
+    '',
+    'millón', 'billón', 'trillón', 'cuatrillón',
     'quintillón', 'sextillón', 'septillón', 'octillón', 'nonillón',
     'decillón', 'undecillón', 'duodecillón', 'tredecillón',
     'cuatordecillón', 'quindecillón'
