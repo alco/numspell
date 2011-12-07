@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Japanese rules and tables for the 'spell' module"""
+"""Japanese rules and tables for the spellnum module"""
 
 RULES = [
     '1x = 十{x}',
@@ -25,7 +25,8 @@ NUMBERS = {
 }
 
 ORDERS = [
-    '', '万', '億', 'billón', 'trillón', 'quadrillón',
+    '',
+    '万', '億', 'billón', 'trillón', 'quadrillón',
     'quintillion', 'sextillion', 'septillion', 'octillion', 'nonillion',
     'decillion', 'undecillion', 'duodecillion', 'tredecillion',
     'quattuordecillion', 'quindecillion'

@@ -1,4 +1,4 @@
-"""English rules and tables for the 'spellnum' module"""
+"""English rules and tables for the spellnum module"""
 
 RULES = [
     'ab = {a0}-{b}',
@@ -38,7 +38,8 @@ NUMBERS = {
 }
 
 ORDERS = [
-    '', 'thousand', 'million', 'billion', 'trillion', 'quadrillion',
+    '',
+    'thousand', 'million', 'billion', 'trillion', 'quadrillion',
     'quintillion', 'sextillion', 'septillion', 'octillion', 'nonillion',
     'decillion', 'undecillion', 'duodecillion', 'tredecillion',
     'quattuordecillion', 'quindecillion'
