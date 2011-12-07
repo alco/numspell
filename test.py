@@ -152,11 +152,17 @@ spanish_infinity = {
     934756: 'novecientos treinta y cuatro mil setecientos cincuenta y seis',
 
     1000000: 'un millón',
-    1100234: 'un millón ciento mil doscientos treinta y cuatro',
+    1100234: 'un millón cien mil doscientos treinta y cuatro',
+    2000000: 'dos millones',
     6000000: 'seis millones',
+    21000000: 'veintiún millones',
+    31000000: 'treinta y un millones',
+
     10000000: 'diez millones',
     10678456: 'diez millones seiscientos setenta y ocho mil cuatrocientos cincuenta y seis',
     100000000: 'cien millones',
+    100100000: 'cien millones cien mil',
+    101000000: 'cientoún millones',
     300873678: 'trescientos millones ochocientos setenta y tres mil seiscientos setenta y ocho',
     15789513: 'quince millones setecientos ochenta y nueve mil quinientos trece',
     143000000: 'ciento cuarenta y tres millones',
@@ -165,7 +171,7 @@ spanish_infinity = {
     1000000000: 'mil millones',
     10000000000: 'diez mil millones',
     100000000000: 'cien mil millones',
-    1000000000000: 'billón',
+    1000000000000: 'un billón',
 }
 
 japanese_100 = {
