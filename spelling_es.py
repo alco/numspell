@@ -76,7 +76,6 @@ ORDERS = [
 PREORDERS = {
     1: 'un',
     21: 'veintiún',
-    101: 'cientoún',
     100: 'cien',
 }
 
@@ -91,8 +90,8 @@ def pl(order):
 PASSES = """
 ^ 1 mil = mil
 ^ 1 <order> = un <order>
-100 1 (mil | <order>) = (ciento un mil | cientoun <order,pl>)
-@ (mil | <order>) = %@ (mil | <order,pl>)
+100 1 (mil | <order>) = (ciento un mil | cientoún <order, pl>)
+_ (mil | <order>) = _ (mil | <order, pl>)
 """
 
 
@@ -105,8 +104,8 @@ def pl_2(order):
     return (order == 'тысяча') and 'тысяч' or order + 'ов'
 
 RU_PASSES = """
-1 <order> = <order>
-2-4 <order> = <order,pl_1>
-* <order> = <order,pl_2>
+^ 1 <order> = <order>
+<2_to_4> <order> = <order, pl_1>
+<not_1> <order> = <order, pl_2>
 """
 
