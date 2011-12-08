@@ -170,7 +170,8 @@ def _pattern_match(pattern, numstr, order):
         mapping.update(_pattern_match(right, rnum, order))
     else:
         for (var, digit) in zip(pattern, numstr):
-            mapping[var] = mapping.get(var, 0) * 10 + int(digit)
+            if not var.isdigit():
+                mapping[var] = mapping.get(var, 0) * 10 + int(digit)
     return mapping
 
 
