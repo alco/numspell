@@ -16,7 +16,11 @@ class Speller(object):
 
         """
         module = __import__("spelling_" + lang)
-        self.RULES = [_Rule(x) for x in (rules or module.RULES)]
+
+        rules = rules or module.RULES
+        rules = filter(bool, (x.strip() for x in rules.splitlines()))
+        self.RULES = [_Rule(x) for x in rules]
+
         self.NUMBERS = number_table or module.NUMBERS
         self.ORDERS = order_table or module.ORDERS
         if order_separator:

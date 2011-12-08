@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """Spanish rules and tables for the spellnum module"""
 
-RULES = [
-    'ab = {a0} y {b}',
-    'axx = {a00} {x}',
-    '1xxx = mil {x}',
-    'axxx = {a} mil {x}',
-    'aaxxx = {a} mil {x}',
-    '100xxx = cien mil {x}',
-    'aaaxxx = {a} mil {x}',
+RULES = """
+ab = {a0} y {b}
+axx = {a00} {x}
+  1xxx = {1000} {x}
+axxx = {a} mil {x}
+  21xxx = veintiún {1000} {x}
+aaxxx = {a} {1000} {x}
+  100xxx = cien {1000} {x}
+  101xxx = ciento un {1000} {x}
+aaaxxx = {a} mil {x}
+(a)xxxxxx = {a} {x}
+"""
 ##  'a--xxx = {a} mil {x}
-    '(a)xxxxxx = {a} {x}',
-]
 
 NUMBERS = {
     0: 'cero',
@@ -52,7 +54,6 @@ NUMBERS = {
     80: 'ochenta',
     90: 'noventa',
     100: 'ciento',
-    101: 'ciento uno',
     200: 'doscientos',
     300: 'trescientos',
     400: 'cuatrocientos',
@@ -60,7 +61,8 @@ NUMBERS = {
     600: 'seiscientos',
     700: 'setecientos',
     800: 'ochocientos',
-    900: 'novecientos'
+    900: 'novecientos',
+    1000: 'mil',
 }
 
 ORDERS = [

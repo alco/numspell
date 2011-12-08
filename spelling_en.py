@@ -1,10 +1,10 @@
 """English rules and tables for the spellnum module"""
 
-RULES = [
-    'ab = {a0}-{b}',
-    'axx = {a} hundred {x}',
-    '(a)xxx = {a} {x}'
-]
+RULES = """
+ab = {a0}-{b}
+axx = {a} hundred {x}
+(a)xxx = {a} {x}
+"""
 
 NUMBERS = {
     0: 'zero',
