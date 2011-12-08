@@ -79,3 +79,8 @@ PREORDERS = {
     101: 'cientoún',
     100: 'cien',
 }
+
+def ORDERMAP(num, order):
+    if num == 1:
+        return order
+    return order.replace('ón', 'ones')

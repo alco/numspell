@@ -4,6 +4,9 @@
 import re
 from itertools import ifilter
 
+from squash import squash
+
+
 class Speller(object):
     """The class which performs spelling numbers"""
 
@@ -35,6 +38,11 @@ class Speller(object):
         else:
             self.PREORDERS = {}
 
+        if hasattr(module, 'ORDERMAP'):
+            self.ORDERMAP = module.ORDERMAP
+        else:
+            self.ORDERMAP = lambda x, y: y
+
     def spell(self, num):
         """Return the spelling of the given integer
 
@@ -46,38 +54,35 @@ class Speller(object):
         if num == 0:
             return self.NUMBERS[0]
 
-        tokens = self._parse_num(str(num))
-        parts = []
-
         isnum = lambda x: type(x) is str and x.isdigit()
         isorder = lambda x: type(x) is int
 
-        last_significant_thing = None
-        for (i, token) in enumerate(tokens):
-            part = None
+        tokens = self._parse_num(str(num))
+        # remove multiple sequential orders
+        tokens = squash(isorder, tokens)
+        # distill tokens into a list of tuples with no whitespace or words
+        processed_tokens = [(index, x) for index, x in enumerate(tokens)
+                            if isnum(x) or isorder(x)]
+        prev_token = lambda i, l: l[i-1][1]
+
+        for i, (index, token) in enumerate(processed_tokens):
             if isnum(token):
-                part = self.NUMBERS[int(token)]
-                last_significant_thing = token
-            elif isorder(token):
-                if not isorder(last_significant_thing):
-                    if i > 0 and isnum(tokens[i-1]):
-                        if int(tokens[i-1]) in self.PREORDERS:
-                            parts[i-1] = self.PREORDERS[int(tokens[i-1])]
-                        sep = self.ORDER_SEP
-                    else:
-                        sep = ''
-                    part = sep + self.ORDERS[token]
-                    last_significant_thing = token
-            else:
-                part = token
-            if part:
-                parts.append(part)
+                parts[index] = self.NUMBERS[int(token)]
+            elif i > 0:
+                prev_index, prev_token = processed_tokens[i-1]
+                prev_token = int(prev_token)
+                # PREORDER pass
+                if prev_token in self.PREORDERS:
+                    parts[prev_index] = self.PREORDERS[prev_token]
+
+                # ORDER pass
+                order = self.ORDERMAP(prev_token, self.ORDERS[token])
+                parts[index] = self.ORDER_SEP + order
 
         result = ''.join(parts).rstrip()
-        print tokens
-        print parts
 
-        return result
+        # Finally, squash any sequence of whitespace into a single space
+        return re.sub(r'\s+', ' ', result)
 
     def _parse_num(self, numstr, order=0):
         num = int(numstr)
