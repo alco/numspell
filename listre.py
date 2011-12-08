@@ -100,7 +100,8 @@ def _build_pattern(pattern, meta):
             m = re.match(r'^<(.+?)>$', elem)
             if m:
                 pat[i] = meta[m.group(1) + "~find"]
-                mapping[m.group(1)] = (meta[m.group(1) + "~replace"], i-sub)
+                if (m.group(1) + "~replace") in meta:
+                    mapping[m.group(1)] = (meta[m.group(1) + "~replace"], i-sub)
             else:
                 pat[i] = make_eq(elem)
 
