@@ -52,18 +52,19 @@ class ListreObject(object):
         return None
 
     def sub(self, list_):
-        m = self.match(list_)
-        if not m:
-            return list_
-
-        body = self.body
-        for i in range(m.end()+1):
-            if i in self.mapping:
-                elem = list_[m.start() + i]
-                body = body.replace('{%s}' % i, self.mapping[i](elem))
-
         result = list_[:]
-        result[m.start():m.end()+1] = [body]
+        while True:
+            m = self.match(result)
+            if not m:
+                break
+
+            body = self.body
+            for i in range(m.end()+1):
+                if i in self.mapping:
+                    elem = result[m.start() + i]
+                    body = body.replace('{%s}' % i, self.mapping[i](elem))
+
+            result[m.start():m.end()+1] = [body]
         return result
 
 
@@ -71,7 +72,7 @@ def _process_rule(rule, meta):
     pattern, body = [x.strip() for x in rule.split('=')]
 
     pattern, mapping = _build_pattern(pattern, meta)
-    body = _build_body(body, mapping)
+    body = _build_body(body, mapping, meta)
 
     return pattern, body, mapping
 
@@ -80,7 +81,8 @@ def _build_pattern(pattern, meta):
         return lambda x: x == arg
 
     def make_lookup():
-        return lambda x: int(x) in meta["_lookup"]
+        lookup = meta["_lookup"]
+        return lambda x: type(x) is str and x.isdigit() and int(x) in lookup
 
     mapping = {}
     pat = re.split(r'\s+', pattern)
@@ -93,6 +95,7 @@ def _build_pattern(pattern, meta):
 
         if elem == '_':
             pat[i] = make_lookup()
+            mapping['_'] = i-sub
         else:
             m = re.match(r'^<(.+?)>$', elem)
             if m:
@@ -104,9 +107,22 @@ def _build_pattern(pattern, meta):
 
     return pat, mapping
 
-def _build_body(body, mapping):
+def _build_body(body, mapping, meta):
     for m in re.finditer(r'<(.+?)>', body):
-        fun, index = mapping[m.group(1)]
+        comps = [x.strip() for x in m.group(1).split(',')]
+        if len(comps) > 1:
+            assert(len(comps) == 2)
+            f, index = mapping[comps[0]]
+            fun = lambda x, g=meta[comps[1]]: g(f(x))
+        else:
+            fun, index = mapping[m.group(1)]
+
         body = body.replace(m.group(0), '{%s}' % index)
         mapping[index] = fun
+
+    if '_' in mapping:
+        index = mapping['_']
+        body = body.replace('_', '{%s}' % index)
+        mapping[index] = lambda x: meta["_lookup"][int(x)]
+
     return body
