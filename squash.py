@@ -23,12 +23,14 @@ def squash(predicate, list_):
         """Find the first element which satisfies the predicate
 
         Return the index of the first element in list_[index:] for which
-        predicate(elem) is True
+        predicate(elem) is True.
+
+        Return -1 if no such  element has been found.
 
         """
-        for i in range(index, len(list_)):
-            if predicate(list_[i]):
-                return i
+        indices = [i for i, x in enumerate(list_[index:]) if predicate(x)]
+        if indices:
+            return index + indices[0]
         return -1
 
     result = list_[:]
