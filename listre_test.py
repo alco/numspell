@@ -177,5 +177,67 @@ class TestLookup(unittest.TestCase):
                          self.lr.sub(['100', 1]))
 
 
+RU_ORDERS = ['', 'тысяча', 'миллион', 'миллиард', 'триллион']
+RU_NUMBERS = {
+    1: 'один',
+    2: 'два',
+
+    3: 'три',
+    4: 'четыре',
+    5: 'пять',
+    10: 'десять',
+    }
+
+ru_meta = {
+    "order~find": lambda x: type(x) is int,
+    "order~replace": lambda x: RU_ORDERS[x],
+
+    "thousand~find": lambda x: type(x) is int and x == 1,
+
+    "2_to_4~find": lambda x: type(x) is str and x.isdigit() and 2 <= int(x) <= 4,
+    "2_to_4~replace": lambda x: RU_NUMBERS[int(x)],
+
+    "not_1~find": lambda x: type(x) is str and x.isdigit() and int(x) != 1,
+    "not_1~replace": lambda x: RU_NUMBERS[int(x)],
+
+    "pl_1": lambda x: (x == 'тысяча') and 'тысячи' or x + 'а',
+    "pl_2": lambda x: (x == 'тысяча') and 'тысяч' or x + 'ов',
+    }
+
+class TestRussian(unittest.TestCase):
+    def test_anchor(self):
+        lr = listre.ListreObject("^ 1 <order> = <order>", ru_meta)
+
+        self.assertTrue(lr.match(['1', 1]))
+        self.assertFalse(lr.match(['', '1', 1]))
+
+        self.assertEqual(['миллион'], lr.sub(['1', 2]))
+        self.assertEqual(['тысяча'], lr.sub(['1', 1]))
+
+    def test_2_to_4(self):
+        lr = listre.ListreObject("<2_to_4> <order> = <2_to_4> <order, pl_1>", ru_meta)
+
+        self.assertEqual(['два миллиарда'],
+                         lr.sub(['2', 3]))
+
+        self.assertEqual(['bla', 'четыре миллиона'],
+                         lr.sub(['bla', '4', 2]))
+
+        self.assertEqual(['bla', 'три тысячи', 'bla'],
+                         lr.sub(['bla', '3', 1, 'bla']))
+
+        self.assertEqual(['два миллиарда', 'четыре миллиона', 'два тысячи', 'три триллиона'],
+                         lr.sub(['2', 3, '4', 2, '2', 1, '3', 4]))
+
+    def test_1_thousand(self):
+        lr = listre.ListreObject("1 <thousand> = одна тысяча", ru_meta)
+
+        self.assertEqual(['одна тысяча'], lr.sub(['1', 1]))
+
+    def test_2_thousand(self):
+        lr = listre.ListreObject("2 <thousand> = две тысячи", ru_meta)
+
+        self.assertEqual(['две тысячи'], lr.sub(['2', 1]))
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
