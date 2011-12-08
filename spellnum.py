@@ -63,6 +63,8 @@ class Speller(object):
         # distill tokens into a list of tuples with no whitespace or words
         processed_tokens = [(index, x) for index, x in enumerate(tokens)
                             if isnum(x) or isorder(x)]
+        parts = tokens[:]
+
         prev_token = lambda i, l: l[i-1][1]
 
         for i, (index, token) in enumerate(processed_tokens):
