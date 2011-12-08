@@ -58,11 +58,17 @@ class Speller(object):
         isorder = lambda x: type(x) is int
 
         tokens = self._parse_num(str(num))
+        ####print '1:', tokens
         # remove multiple sequential orders
         tokens = squash(isorder, tokens)
+        ####print '2:', tokens
         # distill tokens into a list of tuples with no whitespace or words
         processed_tokens = [(index, x) for index, x in enumerate(tokens)
                             if isnum(x) or isorder(x)]
+        ####print '        ||'
+        ####print '        \/'
+        ####print processed_tokens
+        ####print '===='
         parts = tokens[:]
 
         prev_token = lambda i, l: l[i-1][1]
@@ -81,6 +87,7 @@ class Speller(object):
                 order = self.ORDERMAP(prev_token, self.ORDERS[token])
                 parts[index] = self.ORDER_SEP + order
 
+        ####print parts
         result = ''.join(parts).rstrip()
 
         # Finally, squash any sequence of whitespace into a single space
@@ -102,7 +109,7 @@ class Speller(object):
 
 def _expand_body(body, mapping, callback):
     """Produce a spelling given a rule and a mapping of its vars"""
-    print mapping
+    ####print mapping
     body = body.replace('}', '!}')
 
     result = []
@@ -121,9 +128,9 @@ def _expand_body(body, mapping, callback):
         index = result.index(raw_token)
         spelling = callback(token, order)
         if spelling:
-            print result
-            print spelling
-            print '***'
+            ####print result
+            ####print spelling
+            ####print '***'
             result = result[:index] + spelling + result[index+1:]
         else:
             result.pop(index)
