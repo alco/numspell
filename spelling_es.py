@@ -84,3 +84,29 @@ def ORDERMAP(num, order):
     if num == 1:
         return order
     return order.replace('ón', 'ones')
+
+def pl(order):
+    return order.replace('ón', 'ones')
+
+PASSES = """
+^ 1 mil = mil
+^ 1 <order> = un <order>
+100 1 (mil | <order>) = (ciento un mil | cientoun <order,pl>)
+@ (mil | <order>) = %@ (mil | <order,pl>)
+"""
+
+
+def pl_1(order):
+    """2, 3, 4"""
+    return (order == 'тысяча') and 'тысячи' or order + 'а'
+
+def pl_2(order):
+    """5 и больше"""
+    return (order == 'тысяча') and 'тысяч' or order + 'ов'
+
+RU_PASSES = """
+1 <order> = <order>
+2-4 <order> = <order,pl_1>
+* <order> = <order,pl_2>
+"""
+
