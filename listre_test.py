@@ -87,7 +87,7 @@ class TestAlternative(unittest.TestCase):
 
     def setUp(self):
         self.lr = listre.ListreObject("100 1 <order> = "
-                                 "ciento un <order>)",
+                                 "ciento un <order>",
                                  meta=lr_meta)
 
     def test_match_1(self):
@@ -104,7 +104,7 @@ class TestAlternative(unittest.TestCase):
                          self.lr.sub(['bla', '100', '1', 'mil', 'bla']))
 
     def test_sub_2(self):
-        self.assertEqual(['bla', 'cientoun trillón', 'bla'],
+        self.assertEqual(['bla', 'ciento un trillón', 'bla'],
                          self.lr.sub(['bla', '100', '1', 3, 'bla']))
 
 
