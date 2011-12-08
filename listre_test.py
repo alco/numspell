@@ -20,7 +20,7 @@ lr_meta = {
     "order~replace": lambda x: x == 'mil' and x or ORDERS[x],
 
     "gt_1~find": lambda x: type(x) is str and x.isdigit() and int(x) > 1,
-    "gt_1~replace": lambda x: NUMBERS[x],
+    "gt_1~replace": lambda x: NUMBERS[int(x)],
 
     "pl": lambda x: x == 'mil' and 'mil' or x.replace('ón', 'ones'),
     }
@@ -126,7 +126,7 @@ class TestModifier(unittest.TestCase):
     """Modifiers are handy"""
 
     def setUp(self):
-        self.lr = listre.ListreObject("<gt_1> <order> = _ <order,pl>",
+        self.lr = listre.ListreObject("<gt_1> <order> = <gt_1> <order,pl>",
                                  meta=lr_meta)
 
     def test_match(self):
@@ -161,16 +161,21 @@ class TestLookup(unittest.TestCase):
     def test_lookup_1(self):
         self.assertEqual(['un millones'], self.lr.sub(['1', 1]))
 
-    def test_lookup_31(self):
-        self.assertEqual(['treinta y un billones'], self.lr.sub(['30', '1', 2]))
-
     def test_lookup_21(self):
-        self.assertEqual(['veintiun mil'], self.lr.sub(['21', 'mil']))
+        self.assertEqual(['veintiún mil'], self.lr.sub(['21', 'mil']))
 
-    def test_lookup_100(self):
+    def test_lookup_100_combined(self):
         self.assertEqual(['cien mil', 'cien millones'],
                          self.lr.sub(['100', 'mil', '100', 1]))
 
+    def test_lookup_100_1(self):
+        self.assertEqual(['cien mil'],
+                         self.lr.sub(['100', 'mil']))
+
+    def test_lookup_100_2(self):
+        self.assertEqual(['cien millones'],
+                         self.lr.sub(['100', 1]))
+
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)
