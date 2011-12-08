@@ -16,12 +16,13 @@ lr_meta = {
         100: 'cien',
         },
 
-    "order~find": lambda x: type(x) is int,
-    "order~replace": lambda x: ORDERS[x],
-    "gt_1~find": lambda x: type(x) is int and int(x) > 1,
+    "order~find": lambda x: type(x) is int or x == 'mil',
+    "order~replace": lambda x: x == 'mil' and x or ORDERS[x],
+
+    "gt_1~find": lambda x: type(x) is str and x.isdigit() and int(x) > 1,
     "gt_1~replace": lambda x: NUMBERS[x],
 
-    "pl": lambda x: x.replace('ón', 'ones'),
+    "pl": lambda x: x == 'mil' and 'mil' or x.replace('ón', 'ones'),
     }
 
 
@@ -33,7 +34,7 @@ class TestAnchors(unittest.TestCase):
         self.lr = listre.ListreObject("^ 1 mil = mil")
 
     def test_match(self):
-        for list_ in [['1', 'mil'], ['1', ' mil'], ['1', ' mil ']]:
+        for list_ in [['1', 'mil']]:#, ['1', ' mil'], ['1', ' mil ']]:
             self.assertTrue(self.lr.match(list_))
 
     def test_not_match(self):
@@ -47,8 +48,12 @@ class TestOrder(unittest.TestCase):
     def setUp(self):
         self.lr = listre.ListreObject("^ 1 <order> = un <order>", meta=lr_meta)
 
-    def test_match(self):
+    def test_anchored_match(self):
         self.assertTrue(self.lr.match(['1', 1, 'bla']))
+
+    def test_normal_match(self):
+        lr = listre.ListreObject("1 <order> = un <order>", meta=lr_meta)
+        self.assertTrue(lr.match(['bla', '1', 2]))
 
     def test_not_match(self):
         self.assertFalse(self.lr.match(['', '1', 1]))
@@ -81,8 +86,8 @@ class TestAlternative(unittest.TestCase):
     """Alternative matches are handy"""
 
     def setUp(self):
-        self.lr = listre.ListreObject("100 1 (mil | <order>) = "
-                                 "(ciento un mil | cientoun <order>)",
+        self.lr = listre.ListreObject("100 1 <order> = "
+                                 "ciento un <order>)",
                                  meta=lr_meta)
 
     def test_match_1(self):
@@ -107,7 +112,7 @@ class TestAlternative2(unittest.TestCase):
     """This time, only one part of the expression is alternating"""
 
     def setUp(self):
-        self.lr = listre.ListreObject("1 (mil | <order>) = un (mil | <order>)",
+        self.lr = listre.ListreObject("1 <order> = un <order>",
                                       meta=lr_meta)
 
     def test_sub_mil(self):
@@ -121,8 +126,14 @@ class TestModifier(unittest.TestCase):
     """Modifiers are handy"""
 
     def setUp(self):
-        self.lr = listre.ListreObject("<gt_1> <order> = <gt_1> <order, pl>",
+        self.lr = listre.ListreObject("<gt_1> <order> = _ <order,pl>",
                                  meta=lr_meta)
+
+    def test_match(self):
+        self.assertTrue(self.lr.match(['bla', '2', 1]))
+
+    def test_not_match(self):
+        self.assertFalse(self.lr.match(['1', 1]))
 
     def test_2(self):
         self.assertEqual(['dos millones'], self.lr.sub(['2', 1]))
@@ -136,8 +147,16 @@ class TestModifier(unittest.TestCase):
 
 class TestLookup(unittest.TestCase):
     def setUp(self):
-        self.lr = listre.ListreObject("_ (mil | <order>)=_ (mil | <order, pl>)",
+        self.lr = listre.ListreObject("_ <order> = _ <order, pl>",
                                       meta=lr_meta)
+
+    def test_match(self):
+        for key in lr_meta["_lookup"]:
+            self.assertTrue(self.lr.match([str(key), 1]))
+
+    def test_not_match(self):
+        for num in ['2', '10', '25']:
+            self.assertFalse(self.lr.match([num, 1]))
 
     def test_lookup_1(self):
         self.assertEqual(['un millones'], self.lr.sub(['1', 1]))
