@@ -57,7 +57,7 @@ PASSES = """
 1 <thousand> = одна тысяча
 2 <thousand> = две тысячи
 (1) <order> = {}
-(<2_to_4>) <order> = {:pl_1}
+(r'[2-4]') <order> = {:pl_1}
 <order> = {:pl_2}
 """
 
@@ -70,9 +70,6 @@ def _isorder(x):
 def _replace_order(x):
     return ORDERS[x]
 
-def _is_between_2_and_4(x):
-    return type(x) is str and x.isdigit() and 2 <= int(x) <= 4
-
 def _make_plural_1(order):
     return (order == 'тысяча') and 'тысячи' or order + 'а'
 
@@ -83,7 +80,6 @@ META = {
     "thousand~find" : _isthousand,
     "order~find": _isorder,
     "order~replace": _replace_order,
-    "2_to_4~find": _is_between_2_and_4,
     "pl_1": _make_plural_1,
     "pl_2": _make_plural_2,
 }
