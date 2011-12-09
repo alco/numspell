@@ -33,4 +33,6 @@ ORDERS = [
     'quattuordecillion', 'quindecillion'
 ]
 
-ORDER_SEP = ''
+META = {
+    'order_separator': ''
+    }
