@@ -71,7 +71,7 @@ def _replace_order(x):
     return ORDERS[x]
 
 def _is_between_2_and_4(x):
-    return (type(x) is str and x.isdigit()) and 2 <= int(x) <= 4
+    return type(x) is str and x.isdigit() and 2 <= int(x) <= 4
 
 def _make_plural_1(order):
     return (order == 'тысяча') and 'тысячи' or order + 'а'
