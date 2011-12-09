@@ -4,13 +4,9 @@
 RULES = """
 ab = {a0} y {b}
 axx = {a00} {x}
-  1xxx = {1000} {x}
-axxx = {a} mil {x}
-  21xxx = veintiún {1000} {x}
+axxx = {a} {1000} {x}
 aaxxx = {a} {1000} {x}
-  100xxx = cien {1000} {x}
-  101xxx = ciento un {1000} {x}
-aaaxxx = {a} mil {x}
+aaaxxx = {a} {1000} {x}
 (a)xxxxxx = {a} {x}
 """
 ##  'a--xxx = {a} mil {x}
@@ -73,41 +69,30 @@ ORDERS = [
     'cuatordecillón', 'quindecillón'
 ]
 
-PREORDERS = {
-    1: 'un',
-    21: 'veintiún',
-    100: 'cien',
-}
-
-def ORDERMAP(num, order):
-    if num == 1:
-        return order
-    return order.replace('ón', 'ones')
-
-def pl(order):
-    return order.replace('ón', 'ones')
-
 PASSES = """
-^ 1 mil = mil
+^ 1 1000 = mil
 ^ 1 <order> = un <order>
-100 1 (mil | <order>) = (ciento un mil | cientoún <order, pl>)
-_ (mil | <order>) = _ (mil | <order, pl>)
+_ <order> = _ <order, pl>
+<order> = <order, pl>
 """
 
+def _isorder(x):
+    return (x == '1000') or (type(x) is int)
 
-def pl_1(order):
-    """2, 3, 4"""
-    return (order == 'тысяча') and 'тысячи' or order + 'а'
+def _replace_order(x):
+    return (x == '1000') and NUMBERS[1000] or ORDERS[x]
 
-def pl_2(order):
-    """5 и больше"""
-    return (order == 'тысяча') and 'тысяч' or order + 'ов'
+def _make_plural(x):
+    return x.replace('ón', 'ones')
 
-RU_PASSES = """
-^ 1 <order> = <order>
-1 <thousand> = одна тысяча
-2 <thousand> = две тысячи
-<2_to_4> <order> = <order, pl_1>
-<not_1> <order> = <order, pl_2>
-"""
+META = {
+    "_lookup": {
+        1: 'un',
+        21: 'veintiún',
+        100: 'cien',
+    },
 
+    "order~find": _isorder,
+    "order~replace": _replace_order,
+    "pl": _make_plural,
+}
