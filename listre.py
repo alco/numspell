@@ -53,10 +53,13 @@ class ListreObject(object):
 
     def sub(self, list_):
         result = list_[:]
+        matches = []
         while True:
             m = self.match(result)
             if not m:
                 break
+
+            matches.append(m)
 
             body = self.body
             for i in range(m.end()+1):
@@ -65,7 +68,7 @@ class ListreObject(object):
                     body = body.replace('{%s}' % i, self.mapping[i](elem))
 
             result[m.start():m.end()+1] = [body]
-        return result
+        return result, matches
 
 
 def _process_rule(rule, meta):
