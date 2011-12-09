@@ -27,7 +27,7 @@ class Speller(object):
         self.ORDERS = module.ORDERS
 
         if hasattr(module, 'PASSES'):
-            self.PASES = filter(bool,
+            self.PASSES = filter(bool,
                                 (x.strip() for x in module.PASSES.splitlines()))
         else:
             self.PASSES = []
@@ -108,8 +108,7 @@ class Speller(object):
             if isnum(token):
                 parts[index] = self.NUMBERS[int(token)]
             elif isorder(token):
-                sep = self.META["order_separator"]
-                parts[index] = sep + self.ORDERS[token]
+                parts[index] = self.ORDERS[token]
 
         print parts
         result = ''.join(parts).rstrip()
