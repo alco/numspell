@@ -71,9 +71,9 @@ ORDERS = [
 
 PASSES = """
 ^ 1 1000 = mil
-^ 1 <order> = un <order>
-_ <order> = _ <order, pl>
-<order> = <order, pl>
+^ 1 <order> = un {}
+<_> (<order>) = {}
+<order> = {:pl}
 """
 
 def _isorder(x):
@@ -86,13 +86,15 @@ def _make_plural(x):
     return x.replace('ón', 'ones')
 
 META = {
-    "_lookup": {
-        1: 'un',
-        21: 'veintiún',
-        100: 'cien',
-    },
-
     "order~find": _isorder,
     "order~replace": _replace_order,
+    "_~find": lambda x: x in _exceptions,
+    "_~replace": lambda x: _exceptions[x],
     "pl": _make_plural,
+}
+
+_exceptions = {
+    '1': 'un',
+    '21': 'veintiún',
+    '100': 'cien',
 }
