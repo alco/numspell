@@ -4,36 +4,40 @@
 import re
 from itertools import ifilter
 
+import listre
+from squash import squash
+
+
 class Speller(object):
     """The class which performs spelling numbers"""
 
-    def __init__(self, lang="en", rules=None,
-                 number_table=None, order_table=None,
-                 order_separator=None):
-        """Initialize the Speller instance with language code and other options
+    def __init__(self, lang="en"):
+        """Initialize the Speller instance with language code
 
-        lang -- language code in the ISO 639-1 format
+        Arguments
+            lang -- language code in ISO 639-1 format
 
         """
         module = __import__("spelling_" + lang)
 
-        rules = rules or module.RULES
-        rules = filter(bool, (x.strip() for x in rules.splitlines()))
+        rules = filter(bool, (x.strip() for x in module.RULES.splitlines()))
         self.RULES = [_Rule(x) for x in rules]
 
-        self.NUMBERS = number_table or module.NUMBERS
-        self.ORDERS = order_table or module.ORDERS
-        if order_separator:
-            self.ORDER_SEP = order_separator
-        elif hasattr(module, 'ORDER_SEP'):
-            self.ORDER_SEP = module.ORDER_SEP
-        else:
-            self.ORDER_SEP = " "
+        self.NUMBERS = module.NUMBERS
+        self.ORDERS = module.ORDERS
 
-        if hasattr(module, 'PREORDERS'):
-            self.PREORDERS = module.PREORDERS
+        if hasattr(module, 'PASSES'):
+            self.PASSES = filter(bool,
+                                (x.strip() for x in module.PASSES.splitlines()))
         else:
-            self.PREORDERS = {}
+            self.PASSES = []
+
+        self.META = hasattr(module, 'META') and module.META or {}
+
+        if 'order_separator' in self.META:
+            self.ORDER_SEP = self.META['order_separator']
+        else:
+            self.ORDER_SEP = ' '
 
     def spell(self, num):
         """Return the spelling of the given integer
@@ -46,38 +50,71 @@ class Speller(object):
         if num == 0:
             return self.NUMBERS[0]
 
-        tokens = self._parse_num(str(num))
-        parts = []
-
         isnum = lambda x: type(x) is str and x.isdigit()
         isorder = lambda x: type(x) is int
 
-        last_significant_thing = None
-        for (i, token) in enumerate(tokens):
-            part = None
+        tokens = self._parse_num(str(num))
+        ####print '1:', tokens
+        # remove multiple sequential orders
+        tokens = squash(isorder, tokens)
+        print '2:', tokens
+        # distill tokens into a list of tuples with no whitespace or words
+        processed_tokens = [(index, x) for index, x in enumerate(tokens)
+                            if isnum(x) or isorder(x)]
+        secondary_list = [x for index, x in processed_tokens]
+        print '        ||'
+        print '        \/'
+        print processed_tokens
+        print secondary_list
+        print '===='
+        parts = tokens[:]
+
+        # prev_token = lambda i, l: l[i-1][1]
+
+        for pass_ in self.PASSES:
+            lr = listre.ListreObject(pass_, self.META)
+            print '>>>', pass_
+            print secondary_list
+            print lr.match(secondary_list)
+            print '***---***'
+            new_list, matches = lr.sub(secondary_list)
+            if not matches:
+                continue
+            for m in matches:
+                print 'Processing lists'
+                start, end = m.span()
+                start_index = processed_tokens[start][0]
+                end_index = processed_tokens[end][0]
+
+                processed_tokens[start:end+1] = [(-1, None)]
+
+                subst = [new_list[start]]
+                secondary_list[start:end+1] = subst
+                parts[start_index:end_index+1] = subst
+
+                for i in range(start+1, len(processed_tokens)):
+                    index, token = processed_tokens[i]
+                    processed_tokens[i] = (index - (end_index - start_index), token)
+
+                print processed_tokens
+                print secondary_list
+                print parts
+                print '----------------------------'
+            print secondary_list
+            print '>>>___<<<'
+
+        for i, (index, token) in enumerate(processed_tokens):
+            print index, token
             if isnum(token):
-                part = self.NUMBERS[int(token)]
-                last_significant_thing = token
+                parts[index] = self.NUMBERS[int(token)]
             elif isorder(token):
-                if not isorder(last_significant_thing):
-                    if i > 0 and isnum(tokens[i-1]):
-                        if int(tokens[i-1]) in self.PREORDERS:
-                            parts[i-1] = self.PREORDERS[int(tokens[i-1])]
-                        sep = self.ORDER_SEP
-                    else:
-                        sep = ''
-                    part = sep + self.ORDERS[token]
-                    last_significant_thing = token
-            else:
-                part = token
-            if part:
-                parts.append(part)
+                parts[index] = self.ORDERS[token]
 
-        result = ''.join(parts).rstrip()
-        print tokens
         print parts
+        result = ''.join(parts).rstrip()
 
-        return result
+        # Finally, squash any sequence of whitespace into a single space
+        return re.sub(r'\s+', ' ', result)
 
     def _parse_num(self, numstr, order=0):
         num = int(numstr)
@@ -91,11 +128,11 @@ class Speller(object):
             mapping = _pattern_match(rule.pattern, numstr, order)
             result = _expand_body(rule.body, mapping, self._parse_num)
 
-        return result + (order and [order] or [])
+        return result + (order and [self.ORDER_SEP, order] or [])
 
 def _expand_body(body, mapping, callback):
     """Produce a spelling given a rule and a mapping of its vars"""
-    print mapping
+    ####print mapping
     body = body.replace('}', '!}')
 
     result = []
@@ -114,9 +151,9 @@ def _expand_body(body, mapping, callback):
         index = result.index(raw_token)
         spelling = callback(token, order)
         if spelling:
-            print result
-            print spelling
-            print '***'
+            ####print result
+            ####print spelling
+            ####print '***'
             result = result[:index] + spelling + result[index+1:]
         else:
             result.pop(index)

@@ -4,13 +4,9 @@
 RULES = """
 ab = {a0} y {b}
 axx = {a00} {x}
-  1xxx = {1000} {x}
-axxx = {a} mil {x}
-  21xxx = veintiún {1000} {x}
+axxx = {a} {1000} {x}
 aaxxx = {a} {1000} {x}
-  100xxx = cien {1000} {x}
-  101xxx = ciento un {1000} {x}
-aaaxxx = {a} mil {x}
+aaaxxx = {a} {1000} {x}
 (a)xxxxxx = {a} {x}
 """
 ##  'a--xxx = {a} mil {x}
@@ -73,9 +69,30 @@ ORDERS = [
     'cuatordecillón', 'quindecillón'
 ]
 
-PREORDERS = {
-    1: 'un',
-    21: 'veintiún',
-    101: 'cientoún',
-    100: 'cien',
+PASSES = """
+^ 1 1000 = mil
+^ 1 <order> = un <order>
+_ <order> = _ <order, pl>
+<order> = <order, pl>
+"""
+
+def _isorder(x):
+    return (x == '1000') or (type(x) is int)
+
+def _replace_order(x):
+    return (x == '1000') and NUMBERS[1000] or ORDERS[x]
+
+def _make_plural(x):
+    return x.replace('ón', 'ones')
+
+META = {
+    "_lookup": {
+        1: 'un',
+        21: 'veintiún',
+        100: 'cien',
+    },
+
+    "order~find": _isorder,
+    "order~replace": _replace_order,
+    "pl": _make_plural,
 }
