@@ -291,18 +291,3 @@ def _parse_token(string, meta, phantom=False):
     else:
         token = LiteralToken(string)
     return token, phantom
-
-def _build_body(body, mapping, meta):
-    for m in re.finditer(r'<(.+?)>', body):
-        comps = [x.strip() for x in m.group(1).split(',')]
-        if len(comps) > 1:
-            assert(len(comps) == 2)
-            f, index = mapping[comps[0]]
-            fun = lambda x, g=meta[comps[1]]: g(f(x))
-        else:
-            fun, index = mapping[m.group(1)]
-
-        body = body.replace(m.group(0), '{%s}' % index)
-        mapping[index] = fun
-
-    return body
