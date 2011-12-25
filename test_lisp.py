@@ -9,15 +9,21 @@ import lisp
 ORDERS = ['', 'millón', 'billón', 'trillón']
 NUMBERS = { 2: 'dos', 11: 'once', 90: 'noventa' }
 
+lookup = {
+    1: 'un',
+    21: 'veintiún',
+    100: 'cien',
+    }
+
 lr_meta = {
-    "_lookup": {
-        1: 'un',
-        21: 'veintiún',
-        100: 'cien',
-        },
+    "_lookup": lookup,
 
     "order~find": lambda x: type(x) is int or x == 'mil',
     "order~replace": lambda x: x == 'mil' and x or ORDERS[x],
+
+    "lookup~find": lambda x: (type(x) is str) and x.isdigit() and lookup.has_key(int(x)),
+    "lookup~replace": lambda x: lookup[int(x)],
+
 
     "gt_1~find": lambda x: type(x) is str and x.isdigit() and int(x) > 1,
     "gt_1~replace": lambda x: NUMBERS[int(x)],
@@ -47,7 +53,7 @@ class TestOrder(unittest.TestCase):
     """Test order finding and substitution"""
 
     def setUp(self):
-        self.lr = lisp.LispObject("^ 1 <order> = un <order>", meta=lr_meta)
+        self.lr = lisp.LispObject("^ 1 <order> = un {}", meta=lr_meta)
 
     def test_anchored_search(self):
         list_ = ['1', 1, 'bla']
@@ -55,7 +61,7 @@ class TestOrder(unittest.TestCase):
         self.assertEqual((0, 1), self.lr.search(list_).span)
 
     def test_normal_search(self):
-        lr = lisp.LispObject("1 <order> = un <order>", meta=lr_meta)
+        lr = lisp.LispObject("1 <order> = un {}", meta=lr_meta)
         list_ = ['bla', '1', 2]
         self.assertTrue(lr.search(list_))
         self.assertEqual((1, 2), lr.search(list_).span)
@@ -94,7 +100,7 @@ class TestAlternative(unittest.TestCase):
 
     def setUp(self):
         self.lr = lisp.LispObject("100 1 <order> = "
-                                 "ciento un <order>",
+                                 "ciento un {}",
                                  meta=lr_meta)
 
     def test_search_1(self):
@@ -123,7 +129,7 @@ class TestAlternative2(unittest.TestCase):
     """This time, only one part of the expression is alternating"""
 
     def setUp(self):
-        self.lr = lisp.LispObject("1 <order> = un <order>",
+        self.lr = lisp.LispObject("1 <order> = un {}",
                                       meta=lr_meta)
 
     def test_sub_mil(self):
@@ -137,7 +143,7 @@ class TestModifier(unittest.TestCase):
     """Modifiers are handy"""
 
     def setUp(self):
-        self.lr = lisp.LispObject("<gt_1> <order> = <gt_1> <order,pl>",
+        self.lr = lisp.LispObject("<gt_1> <order> = {} {:pl}",
                                  meta=lr_meta)
 
     def test_search(self):
@@ -160,8 +166,8 @@ class TestModifier(unittest.TestCase):
 
 class TestLookup(unittest.TestCase):
     def setUp(self):
-        self.lr = lisp.LispObject("_ <order> = _ <order, pl>",
-                                      meta=lr_meta)
+        self.lr = lisp.LispObject("<lookup> <order> = {} {:pl}",
+                                  meta=lr_meta)
 
     def test_search(self):
         for key in lr_meta["_lookup"]:
@@ -221,7 +227,7 @@ ru_meta = {
 
 class TestRussian(unittest.TestCase):
     def test_anchor(self):
-        lr = lisp.LispObject("^ 1 <order> = <order>", ru_meta)
+        lr = lisp.LispObject("^ 1 <order> = {}", ru_meta)
 
         list_ = ['1', 1]
         self.assertTrue(lr.search(list_))
@@ -232,7 +238,7 @@ class TestRussian(unittest.TestCase):
         self.assertEqual(['тысяча'], lr.sub(['1', 1])[0])
 
     def test_2_to_4(self):
-        lr = lisp.LispObject("<2_to_4> <order> = <2_to_4> <order, pl_1>", ru_meta)
+        lr = lisp.LispObject("<2_to_4> <order> = {} {:pl_1}", ru_meta)
 
         self.assertEqual(['два миллиарда'],
                          lr.sub(['2', 3])[0])
@@ -255,6 +261,19 @@ class TestRussian(unittest.TestCase):
         lr = lisp.LispObject("2 <thousand> = две тысячи", ru_meta)
 
         self.assertEqual(['две тысячи'], lr.sub(['2', 1])[0])
+
+class TestPhantom(unittest.TestCase):
+    def test_simple_phantom(self):
+        lr = lisp.LispObject("(1) <order> = {}", ru_meta)
+
+        self.assertEqual(['1', 'миллион'], lr.sub(['1', 2])[0])
+        self.assertEqual(['whatever', '1', 'миллиард'], lr.sub(['whatever', '1', 3])[0])
+
+    def test_composite_phantom(self):
+        lr = lisp.LispObject("(<2_to_4>) <order> = {:pl_1}", ru_meta)
+
+        self.assertEqual(['...', '3', 'тысячи'], lr.sub(['...', '3', 1])[0])
+        self.assertEqual(['2', 'миллиона'], lr.sub(['2', 2])[0])
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
