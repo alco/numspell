@@ -32,7 +32,7 @@ lr_meta = {
     }
 
 
-class TestAnchors(unittest.TestCase):
+class TestLeftAnchor(unittest.TestCase):
     """Patterns starting with ^ should match only at the start of the list
     """
 
@@ -47,6 +47,42 @@ class TestAnchors(unittest.TestCase):
     def test_not_search(self):
         for list_ in [['10', '1', 'mil'], ['1', '1', 'mil'], ['mil']]:
             self.assertFalse(self.lr.search(list_))
+
+
+class TestRightAnchor(unittest.TestCase):
+    """Patterns ending with $ should match only at the end of the list
+    """
+
+    def setUp(self):
+        self.lr = lisp.LispObject("100 3 $ = hundred and three")
+
+    def test_search(self):
+        list_ = ['', '100', '3']
+        self.assertTrue(self.lr.search(list_))
+        self.assertEqual((1, 2), self.lr.search(list_).span)
+
+    def test_not_search(self):
+        for list_ in [['100', '3', 'mil'], ['100', '3', ''], ['100', 1, '3']]:
+            self.assertFalse(self.lr.search(list_))
+
+class TestBothAnchors(unittest.TestCase):
+    def setUp(self):
+        self.lr = lisp.LispObject("^ 200 1 <order> $ = ...", lr_meta)
+
+    def test_search(self):
+        lr = self.lr
+        for list_ in [['200', '1', 2], ['200', '1', 3]]:
+            self.assertTrue(lr.search(list_))
+            self.assertEqual((0, 2), lr.search(list_).span)
+
+    def test_not_search_1(self):
+        self.assertFalse(self.lr.search(['200', '1', 1, '']))
+
+    def test_not_search_2(self):
+        self.assertFalse(self.lr.search(['', '200', '1', 2]))
+
+    def test_not_search_3(self):
+        self.assertFalse(self.lr.search(['', '200', '1', 2, '']))
 
 
 class TestOrder(unittest.TestCase):
