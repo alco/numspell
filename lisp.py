@@ -142,11 +142,35 @@ class LispObject(object):
         self.pattern = PatternObject(pattern_str, self.meta)
         self.body = BodyObject(body_str, self.meta)
 
-    def sub(self, list_):
-        return self.pattern.sub(list_, self.body)
-
     def search(self, list_):
         return self.pattern.search(list_)
+
+    def sub(self, list_):
+        """Perform substitution and return a new list along with matches
+
+        Each sequence of elements matching the pattern defined in the format
+        string will be replaced by exactly one element the contents of which is
+        based on the format string and the matched elements.
+
+        Return value: a two-element tuple. The first element is a new list with
+        the result of processing. The second one is a list of MatchObject
+        instances found during processing.
+
+        """
+        result = list_[:]
+        matches = []
+        while True:
+            m = self.search(result)
+            if not m:
+                break
+            matches.append(m)
+
+            span = slice(m.start + self.pattern.span[0],
+                         m.end + self.pattern.span[1] + 1)
+            result[span] = [self.body.format(self.pattern.substitutions)]
+
+        return result, matches
+
 
 
 class BodyObject(object):
@@ -165,7 +189,7 @@ class BodyObject(object):
         self.format_list = []
         self.format_str = re.sub(r'{(.*?)}', repl_fn, body)
 
-    def formatted_string(self, tokens):
+    def format(self, tokens):
         format_args = [f(x) for f, x in zip(self.format_list, tokens)]
         return self.format_str.format(*format_args)
 
@@ -203,15 +227,14 @@ class PatternObject(object):
 
     def __init__(self, pattern, meta):
         self.tokens = []
-        self.left_anchor = False
-        self.right_anchor = False
-        self.offset = 0
         self.substitutions = []
+        self.offset = 0
         self._build(pattern, meta)
 
-
-    def token_list(self, index):
-        return [None] * (index - self.offset) + self.tokens
+    def padded_list(self, index, length):
+        start_index = max(0, self.offset - index)
+        new_list = [None] * (index - self.offset) + self.tokens[start_index:]
+        return new_list[:length]
 
     def search(self, list_):
         """Search for a sequence of elements matching the format string
@@ -221,74 +244,21 @@ class PatternObject(object):
 
         """
         list_len = len(list_)
-        pattern_len = len(self.tokens)
+        pattern_len = self.length
         if list_len < pattern_len:
             return None
 
-        def match_from_index(index):
-            cmp_fn = lambda token, x: (token is None) or token.matches(x)
-            if all(map(cmp_fn, self.token_list(index), list_)):
-                return MatchObject(index, pattern_len)
-
-        if self.left_anchor:
-            # Match only at the beginning of list_
-            m = match_from_index(0)
-            if self.right_anchor and list_len != pattern_len:
-                return None
-            return m
-
-        if self.right_anchor:
-            # Match only at the end of list_
-            start_index = list_len - pattern_len
-            return match_from_index(start_index)
-
         # Run through list_ looking for a matching sequence of elements
+        cmp_fn = lambda token, x: (token is None) or token.matches(x)
         for i in range(list_len - pattern_len + 1):
-            m = match_from_index(i)
-            if m:
-                return m
-
-    def sub(self, list_, body):
-        """Perform substitution and return a new list along with matches
-
-        Each sequence of elements matching the pattern defined in the format
-        string will be replaced by exactly one element the contents of which is
-        based on the format string and the matched elements.
-
-        Return value: a two-element tuple. The first element is a new list with
-        the result of processing. The second one is a list of MatchObject
-        instances found during processing.
-
-        """
-        result = list_[:]
-        matches = []
-        while True:
-            m = self.search(result)
-            if not m:
-                break
-            matches.append(m)
-
-            span = slice(m.start + self.span[0],
-                         m.end + self.span[1] + 1)
-            result[span] = [body.formatted_string(self.substitutions)]
-
-        return result, matches
-
+            if all(map(cmp_fn, self.padded_list(i, list_len), list_)):
+                return MatchObject(i, pattern_len)
 
     def _build(self, pattern, meta):
         elements = re.split(r'\s+', pattern)
         span = [0, 0]
-        self.left_anchor = (elements[0] == '^')
-        self.right_anchor = (elements[-1] == '$')
-        if self.left_anchor:
-            elements.pop(0)
-        if self.right_anchor:
-            elements.pop()
-        assert '^' not in elements, ("The ^ anchor may only appear as the first"
-                                     " token in a pattern")
-        assert '$' not in elements, ("The $ anchor may only appear"
-                                     " as the last token in a pattern")
-
+        self.offset = int(elements[0] == '^')
+        right_offset = int(elements[-1] == '$')
         for (i, elem) in enumerate(elements):
             token, isphantom = _parse_token(elem, meta)
             if isphantom:
@@ -299,6 +269,7 @@ class PatternObject(object):
             self.tokens.append(token)
             if (not isphantom) and (not isliteral(token)):
                 self.substitutions.append(token)
+        self.length = len(self.tokens) - self.offset - right_offset
         self.span = tuple(span)
 
 
@@ -308,10 +279,16 @@ def _parse_token(string, meta, phantom=False):
     Return value: a 2-tuple with the token and a phantom flag
 
     """
+    # Check for anchors first
+    if string in ['^', '$']:
+        return AnchorToken(), False
+
+    # Now check for phantoms
     m = re.match(r'^\((.+?)\)$', string)
     if m:
         return _parse_token(m.group(1), meta, phantom=True)
 
+    # The rest of tokens
     m = re.match(r'^<(.+?)>$', string)
     if m:
         name = m.group(1)
@@ -319,4 +296,5 @@ def _parse_token(string, meta, phantom=False):
         token = MatcherToken(fn, name)
     else:
         token = LiteralToken(string)
+
     return token, phantom
