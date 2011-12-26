@@ -137,47 +137,16 @@ class LispObject(object):
 
         """
         self.meta = meta or {}
-        self.pattern, self.body = _process_string(format_str, self.meta)
+
+        pattern_str, body_str = [x.strip() for x in format_str.split('=')]
+        self.pattern = PatternObject(pattern_str, self.meta)
+        self.body = BodyObject(body_str, self.meta)
 
     def sub(self, list_):
-        """Perform substitution and return a new list along with matches
-
-        Each sequence of elements matching the pattern defined in the format
-        string will be replaced by exactly one element the contents of which is
-        based on the format string and the matched elements.
-
-        Return value: a two-element tuple. The first element is a new list with
-        the result of processing. The second one is a list of MatchObject
-        instances found during processing.
-
-        """
-        result = list_[:]
-        matches = []
-        while True:
-            m = self.search(result)
-            if not m:
-                break
-            matches.append(m)
-
-            tokens = self.pattern.substitution_list
-            subst_list = [f(x) for f, x in zip(self.body.format_list, tokens)]
-            span = (m.start + self.pattern.span[0],
-                    m.end + self.pattern.span[1] + 1)
-            result[span[0]:span[1]] = [self.body.format_str.format(*subst_list)]
-
-        return result, matches
+        return self.pattern.sub(list_, self.body)
 
     def search(self, list_):
         return self.pattern.search(list_)
-
-
-def _process_string(format_str, meta):
-    pattern_str, body_str = [x.strip() for x in format_str.split('=')]
-
-    pattern = PatternObject(pattern_str, meta)
-    body = BodyObject(body_str, meta)
-
-    return pattern, body
 
 
 class BodyObject(object):
@@ -187,14 +156,23 @@ class BodyObject(object):
 
         def repl_fn(m):
             fn = lambda token: meta[token.name + "~replace"](token.value)
-            filters = filter(bool, m.group(1).split(':'))
-            for f in filters:
-                fn = wrap_fn(meta[f], fn)
+            wrappers = filter(bool, m.group(1).split(':'))
+            for w in wrappers:
+                fn = wrap_fn(meta[w], fn)
             self.format_list.append(fn)
             return "{}"
 
         self.format_list = []
         self.format_str = re.sub(r'{(.*?)}', repl_fn, body)
+
+    def formatted_string(self, tokens):
+        format_args = [f(x) for f, x in zip(self.format_list, tokens)]
+        return self.format_str.format(*format_args)
+
+
+class AnchorToken(object):
+    def matches(self, obj):
+        return False
 
 
 class LiteralToken(object):
@@ -216,14 +194,24 @@ class MatcherToken(object):
         return self.fn(obj)
 
 
+def isliteral(token):
+    return type(token) is not MatcherToken
+
+
 class PatternObject(object):
     """Encapsulates a list of tokens for matching"""
 
     def __init__(self, pattern, meta):
         self.tokens = []
         self.left_anchor = False
-        self.substitution_list = []
+        self.right_anchor = False
+        self.offset = 0
+        self.substitutions = []
         self._build(pattern, meta)
+
+
+    def token_list(self, index):
+        return [None] * (index - self.offset) + self.tokens
 
     def search(self, list_):
         """Search for a sequence of elements matching the format string
@@ -237,30 +225,71 @@ class PatternObject(object):
         if list_len < pattern_len:
             return None
 
-        cmp_fun = lambda token, x: (token is None) or token.matches(x)
+        def match_from_index(index):
+            cmp_fn = lambda token, x: (token is None) or token.matches(x)
+            if all(map(cmp_fn, self.token_list(index), list_)):
+                return MatchObject(index, pattern_len)
 
         if self.left_anchor:
             # Match only at the beginning of list_
-            bool_list = map(cmp_fun, self.tokens, list_)
-            if all(bool_list):
-                return MatchObject(0, pattern_len)
-        else:
-            # Run through list_ looking for a matching sequence of elements
-            for i in range(list_len - pattern_len + 1):
-                bool_list = map(cmp_fun, self.tokens, list_[i:])
-                if all(bool_list):
-                    return MatchObject(i, pattern_len)
-        return None
+            m = match_from_index(0)
+            if self.right_anchor and list_len != pattern_len:
+                return None
+            return m
+
+        if self.right_anchor:
+            # Match only at the end of list_
+            start_index = list_len - pattern_len
+            return match_from_index(start_index)
+
+        # Run through list_ looking for a matching sequence of elements
+        for i in range(list_len - pattern_len + 1):
+            m = match_from_index(i)
+            if m:
+                return m
+
+    def sub(self, list_, body):
+        """Perform substitution and return a new list along with matches
+
+        Each sequence of elements matching the pattern defined in the format
+        string will be replaced by exactly one element the contents of which is
+        based on the format string and the matched elements.
+
+        Return value: a two-element tuple. The first element is a new list with
+        the result of processing. The second one is a list of MatchObject
+        instances found during processing.
+
+        """
+        result = list_[:]
+        matches = []
+        while True:
+            m = self.search(result)
+            if not m:
+                break
+            matches.append(m)
+
+            span = slice(m.start + self.span[0],
+                         m.end + self.span[1] + 1)
+            result[span] = [body.formatted_string(self.substitutions)]
+
+        return result, matches
+
 
     def _build(self, pattern, meta):
         elements = re.split(r'\s+', pattern)
         span = [0, 0]
+        self.left_anchor = (elements[0] == '^')
+        self.right_anchor = (elements[-1] == '$')
+        if self.left_anchor:
+            elements.pop(0)
+        if self.right_anchor:
+            elements.pop()
+        assert '^' not in elements, ("The ^ anchor may only appear as the first"
+                                     " token in a pattern")
+        assert '$' not in elements, ("The $ anchor may only appear"
+                                     " as the last token in a pattern")
+
         for (i, elem) in enumerate(elements):
-            if elem == '^':
-                assert i == 0, ("The anchor ^ can only appear as the first "
-                                "token in a pattern")
-                self.left_anchor = True
-                continue
             token, isphantom = _parse_token(elem, meta)
             if isphantom:
                 if len(self.tokens) == 0:
@@ -268,15 +297,15 @@ class PatternObject(object):
                 else:
                     span[1] -= 1
             self.tokens.append(token)
-            if (not isphantom) and (type(token) is not LiteralToken):
-                self.substitution_list.append(token)
+            if (not isphantom) and (not isliteral(token)):
+                self.substitutions.append(token)
         self.span = tuple(span)
 
 
 def _parse_token(string, meta, phantom=False):
-    """Determine the type of a token in string
+    """Determine the type of the token in string
 
-    Return value: a tuple with the token
+    Return value: a 2-tuple with the token and a phantom flag
 
     """
     m = re.match(r'^\((.+?)\)$', string)
