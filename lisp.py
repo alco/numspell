@@ -95,85 +95,73 @@ It will not, however, match the following lists:
 
 import re
 
-
-class MatchObject(object):
-    """This class encapsulates the range of matched elements"""
-
+class Range(object):
     def __init__(self, start, length):
-        """Constructor
-
-        Arguments:
-            start  -- index of the first element in the sequence of matched
-                      elements
-
-            length -- length of the sequence
-
-        """
         self.start = start
-        self.end = start + length - 1
-        self.span = (start, self.end)
+        self.end = start + length
+        self.span = (self.start, self.end)
 
 
-class LispObject(object):
+class Parser(object):
     """List processor for element replacement
 
-    Initialize it with a format string and a `meta` dictionary which contains
-    functions for searching and replacing tokens mentioned in the format string.
+    Initialize it with a template string and a dictionary which contains
+    functions for searching and replacing tokens defined in the template
+    string.
 
-    The `sub` method is used for element replcement in a given list. The
-    `search` method checks whether there is a matching sequence of elements in a
+    The 'search' method finds the first matching sequence of elements in a
     list.
+
+    The 'sub' method is used to substitute elements in a list.
 
     """
 
-    def __init__(self, format_str, meta=None):
-        """Initialize the instance with a format string and a `meta` dictionary
+    def __init__(self, template, meta=None):
+        """Initialize the instance with a template string
 
         Arguments:
-            format_str -- format string written in the special syntax
+          template -- template string
 
-            meta       -- dictionary containing functions needed for searching,
-                          replacing and transforming list elements
+          meta     -- a dictionary with functions needed for searching,
+                      replacing and transforming list elements
 
         """
-        self.meta = meta or {}
+        pattern_str, body_str = [x.strip() for x in template.split('=')]
 
-        pattern_str, body_str = [x.strip() for x in format_str.split('=')]
-        self.pattern = PatternObject(pattern_str, self.meta)
-        self.body = BodyObject(body_str, self.meta)
+        self.meta = meta or {}
+        self.pattern = Pattern(pattern_str, self.meta)
+        self.body = Body(body_str, self.meta)
 
     def search(self, list_):
+        """Return the range of the first matching sequence in list_"""
         return self.pattern.search(list_)
 
     def sub(self, list_):
-        """Perform substitution and return a new list along with matches
+        """Perform substitution on the given list
 
-        Each sequence of elements matching the pattern defined in the format
-        string will be replaced by exactly one element the contents of which is
-        based on the format string and the matched elements.
+        Each sequence of elements matching the pattern defined in the template
+        string will be replaced by exactly one element.
 
-        Return value: a two-element tuple. The first element is a new list with
-        the result of processing. The second one is a list of MatchObject
-        instances found during processing.
+        Returns a two-element tuple. The first element is a new list which is
+        the result of processing list_. The second element is a list of tuples;
+        each tuple stores the range of each sequence of replaced elements.
 
         """
         result = list_[:]
-        matches = []
+        ranges = []
         while True:
             m = self.search(result)
             if not m:
                 break
-            matches.append(m)
 
-            span = slice(m.start + self.pattern.span[0],
-                         m.end + self.pattern.span[1] + 1)
-            result[span] = [self.body.format(self.pattern.substitutions)]
-
-        return result, matches
-
+            sub_range = (m.start + self.pattern.span[0],
+                         m.end + self.pattern.span[1])
+            result[slice(*sub_range)] = [self.body.format(self.pattern.subs)]
+            ranges.append(sub_range)
+        return result, ranges
 
 
-class BodyObject(object):
+class Body(object):
     def __init__(self, body, meta):
         def wrap_fn(wrapper, fn):
             return lambda x: wrapper(fn(x))
@@ -222,12 +210,12 @@ def isliteral(token):
     return type(token) is not MatcherToken
 
 
-class PatternObject(object):
+class Pattern(object):
     """Encapsulates a list of tokens for matching"""
 
     def __init__(self, pattern, meta):
         self.tokens = []
-        self.substitutions = []
+        self.subs = []
         self.offset = 0
         self._build(pattern, meta)
 
@@ -237,10 +225,9 @@ class PatternObject(object):
         return new_list[:length]
 
     def search(self, list_):
-        """Search for a sequence of elements matching the format string
+        """Search for a sequence of elements matching the pattern
 
-        Return a MatchObject instance encapsulating the range of the first
-        sequence of matching elements.
+        Return a Range of the first sequence of matching elements.
 
         """
         list_len = len(list_)
@@ -252,7 +239,7 @@ class PatternObject(object):
         cmp_fn = lambda token, x: (token is None) or token.matches(x)
         for i in range(list_len - pattern_len + 1):
             if all(map(cmp_fn, self.padded_list(i, list_len), list_)):
-                return MatchObject(i, pattern_len)
+                return Range(i, pattern_len)
 
     def _build(self, pattern, meta):
         elements = re.split(r'\s+', pattern)
@@ -268,7 +255,7 @@ class PatternObject(object):
                     span[1] -= 1
             self.tokens.append(token)
             if (not isphantom) and (not isliteral(token)):
-                self.substitutions.append(token)
+                self.subs.append(token)
         self.length = len(self.tokens) - self.offset - right_offset
         self.span = tuple(span)
 
