@@ -1,5 +1,10 @@
 This file contains notes to self, just so that I don't forget them later on.
 
+* Refactor unit tests for listparse and squash.
+
+  Having a unified style of writing tests is helpful for attracting
+  contributors. I should also take a look at the nose module.
+
 * Replace `print`s with `log`s.
 
   The idea is that logs will stay in the production code. They can be easily
