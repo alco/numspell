@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""A test suite for the lisp module"""
+"""A test suite for the listparse module"""
 
 import unittest
 
-import lisp
+import listparse
 
 
 ORDERS = ['', 'millón', 'billón', 'trillón']
@@ -37,7 +37,7 @@ class TestLeftAnchor(unittest.TestCase):
     """
 
     def setUp(self):
-        self.lr = lisp.Parser("^ 1 mil = mil")
+        self.lr = listparse.Parser("^ 1 mil = mil")
 
     def test_search(self):
         for list_ in [['1', 'mil']]:#, ['1', ' mil'], ['1', ' mil ']]:
@@ -54,7 +54,7 @@ class TestRightAnchor(unittest.TestCase):
     """
 
     def setUp(self):
-        self.lr = lisp.Parser("100 3 $ = hundred and three")
+        self.lr = listparse.Parser("100 3 $ = hundred and three")
 
     def test_search(self):
         list_ = ['', '100', '3']
@@ -67,7 +67,7 @@ class TestRightAnchor(unittest.TestCase):
 
 class TestBothAnchors(unittest.TestCase):
     def setUp(self):
-        self.lr = lisp.Parser("^ 200 1 <order> $ = ...", lr_meta)
+        self.lr = listparse.Parser("^ 200 1 <order> $ = ...", lr_meta)
 
     def test_search(self):
         lr = self.lr
@@ -89,7 +89,7 @@ class TestOrder(unittest.TestCase):
     """Test order finding and substitution"""
 
     def setUp(self):
-        self.lr = lisp.Parser("^ 1 <order> = un {}", meta=lr_meta)
+        self.lr = listparse.Parser("^ 1 <order> = un {}", meta=lr_meta)
 
     def test_anchored_search(self):
         list_ = ['1', 1, 'bla']
@@ -97,7 +97,7 @@ class TestOrder(unittest.TestCase):
         self.assertEqual((0, 2), self.lr.search(list_).span)
 
     def test_normal_search(self):
-        lr = lisp.Parser("1 <order> = un {}", meta=lr_meta)
+        lr = listparse.Parser("1 <order> = un {}", meta=lr_meta)
         list_ = ['bla', '1', 2]
         self.assertTrue(lr.search(list_))
         self.assertEqual((1, 3), lr.search(list_).span)
@@ -117,7 +117,7 @@ class TestConsecutive(unittest.TestCase):
     """Consecutive elements have to search as well"""
 
     def setUp(self):
-        self.lr = lisp.Parser("100 1 mil = ciento un mil")
+        self.lr = listparse.Parser("100 1 mil = ciento un mil")
 
     def test_search(self):
         list_ = ['bla', '100', '1', 'mil']
@@ -135,7 +135,7 @@ class TestAlternative(unittest.TestCase):
     """Alternative searches are handy"""
 
     def setUp(self):
-        self.lr = lisp.Parser("100 1 <order> = "
+        self.lr = listparse.Parser("100 1 <order> = "
                                  "ciento un {}",
                                  meta=lr_meta)
 
@@ -165,7 +165,7 @@ class TestAlternative2(unittest.TestCase):
     """This time, only one part of the expression is alternating"""
 
     def setUp(self):
-        self.lr = lisp.Parser("1 <order> = un {}",
+        self.lr = listparse.Parser("1 <order> = un {}",
                                       meta=lr_meta)
 
     def test_sub_mil(self):
@@ -179,7 +179,7 @@ class TestModifier(unittest.TestCase):
     """Modifiers are handy"""
 
     def setUp(self):
-        self.lr = lisp.Parser("<gt_1> <order> = {} {:pl}",
+        self.lr = listparse.Parser("<gt_1> <order> = {} {:pl}",
                                  meta=lr_meta)
 
     def test_search(self):
@@ -202,7 +202,7 @@ class TestModifier(unittest.TestCase):
 
 class TestLookup(unittest.TestCase):
     def setUp(self):
-        self.lr = lisp.Parser("<lookup> <order> = {} {:pl}",
+        self.lr = listparse.Parser("<lookup> <order> = {} {:pl}",
                                   meta=lr_meta)
 
     def test_search(self):
@@ -263,7 +263,7 @@ ru_meta = {
 
 class TestRussian(unittest.TestCase):
     def test_anchor(self):
-        lr = lisp.Parser("^ 1 <order> = {}", ru_meta)
+        lr = listparse.Parser("^ 1 <order> = {}", ru_meta)
 
         list_ = ['1', 1]
         self.assertTrue(lr.search(list_))
@@ -274,7 +274,7 @@ class TestRussian(unittest.TestCase):
         self.assertEqual(['тысяча'], lr.sub(['1', 1])[0])
 
     def test_2_to_4(self):
-        lr = lisp.Parser("<2_to_4> <order> = {} {:pl_1}", ru_meta)
+        lr = listparse.Parser("<2_to_4> <order> = {} {:pl_1}", ru_meta)
 
         self.assertEqual(['два миллиарда'],
                          lr.sub(['2', 3])[0])
@@ -289,24 +289,24 @@ class TestRussian(unittest.TestCase):
                          lr.sub(['2', 3, '4', 2, '2', 1, '3', 4])[0])
 
     def test_1_thousand(self):
-        lr = lisp.Parser("1 <thousand> = одна тысяча", ru_meta)
+        lr = listparse.Parser("1 <thousand> = одна тысяча", ru_meta)
 
         self.assertEqual(['одна тысяча'], lr.sub(['1', 1])[0])
 
     def test_2_thousand(self):
-        lr = lisp.Parser("2 <thousand> = две тысячи", ru_meta)
+        lr = listparse.Parser("2 <thousand> = две тысячи", ru_meta)
 
         self.assertEqual(['две тысячи'], lr.sub(['2', 1])[0])
 
 class TestPhantom(unittest.TestCase):
     def test_simple_phantom(self):
-        lr = lisp.Parser("(1) <order> = {}", ru_meta)
+        lr = listparse.Parser("(1) <order> = {}", ru_meta)
 
         self.assertEqual(['1', 'миллион'], lr.sub(['1', 2])[0])
         self.assertEqual(['whatever', '1', 'миллиард'], lr.sub(['whatever', '1', 3])[0])
 
     def test_composite_phantom(self):
-        lr = lisp.Parser("(<2_to_4>) <order> = {:pl_1}", ru_meta)
+        lr = listparse.Parser("(<2_to_4>) <order> = {:pl_1}", ru_meta)
 
         self.assertEqual(['...', '3', 'тысячи'], lr.sub(['...', '3', 1])[0])
         self.assertEqual(['2', 'миллиона'], lr.sub(['2', 2])[0])

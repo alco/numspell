@@ -4,7 +4,7 @@
 import re
 from itertools import ifilter
 
-import lisp
+import listparse
 from squash import squash
 
 
@@ -72,7 +72,7 @@ class Speller(object):
         # prev_token = lambda i, l: l[i-1][1]
 
         for pass_ in self.PASSES:
-            lr = lisp.Parser(pass_, self.META)
+            lr = listparse.Parser(pass_, self.META)
             print '>>>', pass_
             print secondary_list
             print lr.search(secondary_list)
