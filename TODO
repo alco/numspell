@@ -48,14 +48,7 @@ This file contains notes to self, just so that I don't forget them later on.
       (a)xxxxxx = {a} {x}
      """
 
-
-* Document and refactor `listre`.
-
-  It certainly needs a bit more explanation on how it handles the syntax for
-  passes.
-
-
-* Implement the **literal string** with spaces for the `lisp` module
+* Implement the **literal string** with spaces for the `listparse` module
 
   A **literal string** is any sequence of characters, usually enclosed in single
   quotes ('). If there are no whitespace characters in the literal string, the
@@ -63,13 +56,12 @@ This file contains notes to self, just so that I don't forget them later on.
 
   >>>
   IMPORTANT: this feature is not implemented in the syntax. However, you can
-  emulate it by using a `matcher` with the following combination of functions:
+  emulate it by using a `matcher` with the following function:
 
     "mystr~find": lambda x: x == 'my literal string'
-    "mystr~replace": lambda x: x
   <<<
 
-* Implement the **regex literal** for the `lisp` module
+* Implement the **regex literal** for the `listparse` module
 
   A **regex literal** is a string enclosed in single quotes with the letter 'r'
   immediately preceding the opening quote. Inside the quotes, the syntax defined
@@ -77,3 +69,5 @@ This file contains notes to self, just so that I don't forget them later on.
   a regex literal, `re.search` function is used. That is, if you want your
   regular expression to match the whole contents of an element, use the '^' and
   '$' anchors inside the regex literal.
+
+  This too can be emulated with a matcher token.
