@@ -72,7 +72,7 @@ ORDERS = [
 PASSES = """
 ^ 1 1000 = mil
 ^ 1 <order> = un {}
-<_> (<order>) = {}
+<lookup> (<order>) = {}
 <order> = {:pl}
 """
 
@@ -88,8 +88,8 @@ def _make_plural(x):
 META = {
     "order~find": _isorder,
     "order~replace": _replace_order,
-    "_~find": lambda x: x in _exceptions,
-    "_~replace": lambda x: _exceptions[x],
+    "lookup~find": lambda x: x in _exceptions,
+    "lookup~replace": lambda x: _exceptions[x],
     "pl": _make_plural,
 }
 
