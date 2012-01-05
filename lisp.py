@@ -154,72 +154,24 @@ class Parser(object):
             if not m:
                 break
 
-            sub_range = (m.start + self.pattern.span[0],
-                         m.end + self.pattern.span[1])
+            sub_range = (m.start + self.pattern.insets[0],
+                         m.end + self.pattern.insets[1])
             result[slice(*sub_range)] = [self.body.format(self.pattern.subs)]
             ranges.append(sub_range)
         return result, ranges
-
-
-class Body(object):
-    def __init__(self, body, meta):
-        def wrap_fn(wrapper, fn):
-            return lambda x: wrapper(fn(x))
-
-        def repl_fn(m):
-            fn = lambda token: meta[token.name + "~replace"](token.value)
-            wrappers = filter(bool, m.group(1).split(':'))
-            for w in wrappers:
-                fn = wrap_fn(meta[w], fn)
-            self.format_list.append(fn)
-            return "{}"
-
-        self.format_list = []
-        self.format_str = re.sub(r'{(.*?)}', repl_fn, body)
-
-    def format(self, tokens):
-        format_args = [f(x) for f, x in zip(self.format_list, tokens)]
-        return self.format_str.format(*format_args)
-
-
-class AnchorToken(object):
-    def matches(self, obj):
-        return False
-
-
-class LiteralToken(object):
-    def __init__(self, string):
-        self.string = string
-
-    def matches(self, obj):
-        return obj == self.string
-
-
-class MatcherToken(object):
-    def __init__(self, fn, name):
-        self.fn = fn
-        self.name = name
-        self.value = None
-
-    def matches(self, obj):
-        self.value = obj
-        return self.fn(obj)
-
-
-def isliteral(token):
-    return type(token) is not MatcherToken
 
 
 class Pattern(object):
     """Encapsulates a list of tokens for matching"""
 
     def __init__(self, pattern, meta):
-        self.tokens = []
-        self.subs = []
-        self.offset = 0
+        self.tokens = []        # tokens to match against
+        self.subs = []          # substitutions (tokens with values)
+        self.offset = 0         # will be set to 1 if pattern has the ^ anchor
         self._build(pattern, meta)
 
     def padded_list(self, index, length):
+        """Return a list of tokens padded with None values at the beginning"""
         start_index = max(0, self.offset - index)
         new_list = [None] * (index - self.offset) + self.tokens[start_index:]
         return new_list[:length]
@@ -233,7 +185,7 @@ class Pattern(object):
         list_len = len(list_)
         pattern_len = self.length
         if list_len < pattern_len:
-            return None
+            return
 
         # Run through list_ looking for a matching sequence of elements
         cmp_fn = lambda token, x: (token is None) or token.matches(x)
@@ -242,28 +194,96 @@ class Pattern(object):
                 return Range(i, pattern_len)
 
     def _build(self, pattern, meta):
+        """Build the 'tokens' and 'subs' lists"""
         elements = re.split(r'\s+', pattern)
-        span = [0, 0]
-        self.offset = int(elements[0] == '^')
-        right_offset = int(elements[-1] == '$')
+        insets = [0, 0]
+        left_side = True
+        isliteral = lambda token: type(token) is not MatcherToken
+
         for (i, elem) in enumerate(elements):
-            token, isphantom = _parse_token(elem, meta)
+            token, isphantom = parse_token(elem, meta)
             if isphantom:
-                if len(self.tokens) == 0:
-                    span[0] += 1
+                if left_side:
+                    insets[0] += 1
                 else:
-                    span[1] -= 1
+                    insets[1] -= 1
+            else:
+                left_side = False
             self.tokens.append(token)
             if (not isphantom) and (not isliteral(token)):
                 self.subs.append(token)
+
+        self.offset = int(elements[0] == '^')
+        right_offset = int(elements[-1] == '$')
         self.length = len(self.tokens) - self.offset - right_offset
-        self.span = tuple(span)
+        self.insets = tuple(insets)
 
 
-def _parse_token(string, meta, phantom=False):
+class Body(object):
+    """The body defines a replacement for a matching sequence of elements"""
+    def __init__(self, body, meta):
+        def wrap_fn(wrapper, fn):
+            return lambda x: wrapper(fn(x))
+
+        def repl_fn(m):
+            fn = lambda token: meta[token.name + "~replace"](token.value)
+            wrappers = filter(bool, m.group(1).split(':'))
+            for w in wrappers:
+                fn = wrap_fn(meta[w], fn)
+            self.format_list.append(fn)
+            return "{}"
+
+        # Here we look at each substitution token enclosed in { and }. Inside
+        # repl_fn, we gather all of the modifiers into a single function using
+        # wrap_fn.  Then this function is appended to the format_list.
+        self.format_list = []
+        self.format_str = re.sub(r'{(.*?)}', repl_fn, body)
+
+    def format(self, tokens):
+        """Returns a final string after substituting token values"""
+        format_args = [f(x) for f, x in zip(self.format_list, tokens)]
+        return self.format_str.format(*format_args)
+
+
+class AnchorToken(object):
+    """The anchor token allows to match at either end of a list
+
+    This token is represented by ^ and $ symbols in the template string syntax.
+
+    """
+    def matches(self, obj):
+        return False
+
+
+class LiteralToken(object):
+    """Literal token simply matches the string it is given"""
+    def __init__(self, string):
+        self.string = string
+
+    def matches(self, obj):
+        return obj == self.string
+
+
+class MatcherToken(object):
+    """Matcher token uses a function to match against an element
+
+    It also stores the value of the element it matches
+
+    """
+    def __init__(self, fn, name):
+        self.fn = fn
+        self.name = name
+        self.value = None
+
+    def matches(self, obj):
+        self.value = obj
+        return self.fn(obj)
+
+
+def parse_token(string, meta, phantom=False):
     """Determine the type of the token in string
 
-    Return value: a 2-tuple with the token and a phantom flag
+    Return a tuple with the token and a phantom flag
 
     """
     # Check for anchors first
@@ -273,7 +293,7 @@ def _parse_token(string, meta, phantom=False):
     # Now check for phantoms
     m = re.match(r'^\((.+?)\)$', string)
     if m:
-        return _parse_token(m.group(1), meta, phantom=True)
+        return parse_token(m.group(1), meta, phantom=True)
 
     # The rest of tokens
     m = re.match(r'^<(.+?)>$', string)
@@ -283,5 +303,4 @@ def _parse_token(string, meta, phantom=False):
         token = MatcherToken(fn, name)
     else:
         token = LiteralToken(string)
-
     return token, phantom
