@@ -4,7 +4,7 @@
 import re
 from itertools import ifilter
 
-import listre
+import listparse
 from squash import squash
 
 
@@ -72,24 +72,24 @@ class Speller(object):
         # prev_token = lambda i, l: l[i-1][1]
 
         for pass_ in self.PASSES:
-            lr = listre.ListreObject(pass_, self.META)
+            lr = listparse.Parser(pass_, self.META)
             print '>>>', pass_
             print secondary_list
-            print lr.match(secondary_list)
+            print lr.search(secondary_list)
             print '***---***'
             new_list, matches = lr.sub(secondary_list)
             if not matches:
                 continue
             for m in matches:
                 print 'Processing lists'
-                start, end = m.span()
+                start, end = m
                 start_index = processed_tokens[start][0]
-                end_index = processed_tokens[end][0]
+                end_index = processed_tokens[end-1][0]
 
-                processed_tokens[start:end+1] = [(-1, None)]
+                processed_tokens[start:end] = [(-1, None)]
 
                 subst = [new_list[start]]
-                secondary_list[start:end+1] = subst
+                secondary_list[start:end] = subst
                 parts[start_index:end_index+1] = subst
 
                 for i in range(start+1, len(processed_tokens)):

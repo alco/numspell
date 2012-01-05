@@ -53,3 +53,27 @@ This file contains notes to self, just so that I don't forget them later on.
 
   It certainly needs a bit more explanation on how it handles the syntax for
   passes.
+
+
+* Implement the **literal string** with spaces for the `lisp` module
+
+  A **literal string** is any sequence of characters, usually enclosed in single
+  quotes ('). If there are no whitespace characters in the literal string, the
+  quotes can be omitted.
+
+  >>>
+  IMPORTANT: this feature is not implemented in the syntax. However, you can
+  emulate it by using a `matcher` with the following combination of functions:
+
+    "mystr~find": lambda x: x == 'my literal string'
+    "mystr~replace": lambda x: x
+  <<<
+
+* Implement the **regex literal** for the `lisp` module
+
+  A **regex literal** is a string enclosed in single quotes with the letter 'r'
+  immediately preceding the opening quote. Inside the quotes, the syntax defined
+  in the Python's standard `re` module is used. To match a list element against
+  a regex literal, `re.search` function is used. That is, if you want your
+  regular expression to match the whole contents of an element, use the '^' and
+  '$' anchors inside the regex literal.

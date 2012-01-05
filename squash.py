@@ -1,3 +1,5 @@
+__all__ = ['squash']
+
 from operator import add, eq
 import unittest
 
@@ -5,17 +7,17 @@ def squash(predicate, list_):
     """Squash multiple consecutive list elements into one
 
     For each sequence of elements, optionally interspersed with whitespace or
-    empty strings, for which the predicate returns True, take the first element
+    empty strings, for which the predicate returns True, leave the first element
     in the sequence and drop the rest.
 
-    Parameters:
-        predicate -- function of one argument returning True for squashable
-                     elements
+    Arguments:
+      predicate -- function of one argument returning True for squashable
+                   elements
 
-        list_     -- list of elements to modify
+      list_     -- list of elements to modify
 
     Return value:
-        A new list. The input list remains intact.
+      A new list with squashed elements. The input list remains unchanged.
 
     """
 
@@ -50,7 +52,6 @@ def squash(predicate, list_):
             result[base+1:n+1] = []
         else:
             base = n
-
     return result
 
 

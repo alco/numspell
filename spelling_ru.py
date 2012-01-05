@@ -53,12 +53,12 @@ ORDERS = [
 ]
 
 PASSES = """
-^ 1 <order> = <order>
+^ 1 <order> = {}
 1 <thousand> = одна тысяча
 2 <thousand> = две тысячи
-1 <order> = один <order>
-<2_to_4> <order> = <2_to_4> <order, pl_1>
-<order> = <order, pl_2>
+(1) <order> = {}
+(<2-4>) <order> = {:pl_1}
+<order> = {:pl_2}
 """
 
 def _isthousand(x):
@@ -70,7 +70,7 @@ def _isorder(x):
 def _replace_order(x):
     return ORDERS[x]
 
-def _is_between_2_and_4(x):
+def _between_2_and_4(x):
     return type(x) is str and x.isdigit() and 2 <= int(x) <= 4
 
 def _make_plural_1(order):
@@ -83,8 +83,7 @@ META = {
     "thousand~find" : _isthousand,
     "order~find": _isorder,
     "order~replace": _replace_order,
-    "2_to_4~find": _is_between_2_and_4,
-    "2_to_4~replace": lambda x: NUMBERS[int(x)],
+    "2-4~find": _between_2_and_4,
     "pl_1": _make_plural_1,
     "pl_2": _make_plural_2,
 }
