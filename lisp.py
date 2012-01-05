@@ -86,6 +86,8 @@ class Pattern(object):
         self.tokens = []        # tokens to match against
         self.subs = []          # substitutions (tokens with values)
         self.offset = 0         # will be set to 1 if pattern has the ^ anchor
+        self.insets = (0, 0)    # a bias applied to the range of substitution
+        self.length = 0
         self._build(pattern, meta)
 
     def padded_list(self, index, length):
@@ -118,7 +120,7 @@ class Pattern(object):
         left_side = True
         isliteral = lambda token: type(token) is not MatcherToken
 
-        for (i, elem) in enumerate(elements):
+        for elem in elements:
             token, isphantom = parse_token(elem, meta)
             if isphantom:
                 if left_side:
@@ -169,7 +171,7 @@ class AnchorToken(object):
     This token is represented by ^ and $ symbols in the template string syntax.
 
     """
-    def matches(self, obj):
+    def matches(self, _):
         return False
 
 
