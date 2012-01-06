@@ -10,14 +10,41 @@ TemplateSyntax.md in the 'doc' directory.
 
 """
 
+__all__ = ['Range', 'Parser']
+
+
 import re
 
 
 class Range(object):
+    """Encapsulates a range defined by start and end
+
+    'start' stores index of the first matched element in a sequence
+
+    'end' stores index of the element immediately following the last matched
+    element in a sequence. In other words, it's the last matched element index
+    + 1.
+
+    'span' is a two-element tuple: (start, end).
+
+    """
     def __init__(self, start, length):
-        self.start = start
-        self.end = start + length
-        self.span = (self.start, self.end)
+        self._start = start
+        self._end = start + length
+        self._span = (self._start, self._end)
+
+    def _get_start(self):
+        return self._start
+
+    def _get_end(self):
+        return self._end
+
+    def _get_span(self):
+        return self._span
+
+    start = property(_get_start)
+    end = property(_get_end)
+    span = property(_get_span)
 
 
 class Parser(object):
@@ -51,7 +78,7 @@ class Parser(object):
         self.body = Body(body_str, self.meta)
 
     def search(self, list_):
-        """Return the range of the first matching sequence in list_"""
+        """Return a Range of the first matching sequence in list_"""
         return self.pattern.search(list_)
 
     def sub(self, list_):
