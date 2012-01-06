@@ -2,7 +2,6 @@
 """A test suite for the listparse module"""
 
 import unittest
-
 import listparse
 
 
@@ -312,4 +311,4 @@ class TestPhantom(unittest.TestCase):
         self.assertEqual(['2', 'миллиона'], lr.sub(['2', 2])[0])
 
 if __name__ == '__main__':
-    unittest.main(verbosity=2)
+    unittest.main()
