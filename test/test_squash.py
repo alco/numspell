@@ -12,8 +12,12 @@ class SquashTest(unittest.TestCase):
         self.assertEqual(list_, squash(isint, list_))
 
     def test_one_element(self):
-        for list_ in [[1], ['a'], [None], '', ' ']:
+        for list_ in [[1], ['a'], ['None'], '', ' ']:
             self.assertEqual(list_, squash(isint, list_))
+
+    def test_invalid_list(self):
+        with self.assertRaises(AssertionError):
+            squash(isint, [None])
 
     def test_no_dupes(self):
         list_ = [1, '2', 3, '4', ' ', 5, '6', ' ', 7, '8', '6', 9]

@@ -8,19 +8,22 @@ def squash(predicate, list_):
     """Squash multiple consecutive list elements into one
 
     For each sequence of elements, optionally interspersed with whitespace or
-    empty strings, for which the predicate returns True, leave the first element
-    in the sequence and drop the rest.
+    empty strings, for which the predicate returns True, leave the first
+    element in the sequence and drop the rest.
 
     Arguments:
       predicate -- function of one argument returning True for squashable
                    elements
 
-      list_     -- list of elements to modify
+      list_     -- list of elements to modify. Every list element, for which
+                   the predicate returns False, must be a string.
 
     Return value:
       A new list with squashed elements. The input list remains unchanged.
 
     """
+
+    assert not filter(lambda x: not (predicate(x) or type(x) is str), list_)
 
     def find(index, list_):
         """Find the first element which satisfies the predicate
