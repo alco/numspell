@@ -118,6 +118,23 @@ class Speller(object):
         # Finally, squash any sequence of whitespace into a single space
         return re.sub(r'\s+', ' ', result)
 
+    def check(self, num, spelling):
+        """Check if the given spelling is correct
+
+        Arguments:
+          num       -- a number to spell
+          spelling  -- num's spelling
+
+        Return value:
+          None if the spelling is correct.
+          Otherwise return the correct spelling.
+
+        """
+        result = self.spell(num)
+        if result == spelling:
+            return
+        return result
+
     def _parse_num(self, numstr, order=0):
         num = int(numstr)
         if num == 0:
