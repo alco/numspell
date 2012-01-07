@@ -19,7 +19,7 @@ class Speller(object):
 
         """
         spelling_mod = "spelling_" + lang
-        package = __import__("spellnum", fromlist=[spelling_mod])
+        package = __import__("numspell", fromlist=[spelling_mod])
         module = getattr(package, spelling_mod)
 
         rules = filter(bool, (x.strip() for x in module.RULES.splitlines()))
@@ -59,34 +59,34 @@ class Speller(object):
         isorder = lambda x: type(x) is int
 
         tokens = self._parse_num(str(num))
-        ####print '1:', tokens
+        ######print '1:', tokens
         # remove multiple sequential orders
         tokens = squash(isorder, tokens)
-        print '2:', tokens
+        ##print '2:', tokens
         # distill tokens into a list of tuples with no whitespace or words
         processed_tokens = [(index, x) for index, x in enumerate(tokens)
                             if isnum(x) or isorder(x)]
         secondary_list = [x for index, x in processed_tokens]
-        print '        ||'
-        print '        \/'
-        print processed_tokens
-        print secondary_list
-        print '===='
+        ##print '        ||'
+        ##print '        \/'
+        ##print processed_tokens
+        ##print secondary_list
+        ##print '===='
         parts = tokens[:]
 
         # prev_token = lambda i, l: l[i-1][1]
 
         for pass_ in self.PASSES:
             lr = listparse.Parser(pass_, self.META)
-            print '>>>', pass_
-            print secondary_list
-            print lr.search(secondary_list)
-            print '***---***'
+            ##print '>>>', pass_
+            ##print secondary_list
+            ##print lr.search(secondary_list)
+            ##print '***---***'
             new_list, matches = lr.sub(secondary_list)
             if not matches:
                 continue
             for m in matches:
-                print 'Processing lists'
+                ##print 'Processing lists'
                 start, end = m
                 start_index = processed_tokens[start][0]
                 end_index = processed_tokens[end-1][0]
@@ -101,21 +101,21 @@ class Speller(object):
                     index, token = processed_tokens[i]
                     processed_tokens[i] = (index - (end_index - start_index), token)
 
-                print processed_tokens
-                print secondary_list
-                print parts
-                print '----------------------------'
-            print secondary_list
-            print '>>>___<<<'
+                ##print processed_tokens
+                ##print secondary_list
+                ##print parts
+                ##print '----------------------------'
+            ##print secondary_list
+            ##print '>>>___<<<'
 
         for i, (index, token) in enumerate(processed_tokens):
-            print index, token
+            ##print index, token
             if isnum(token):
                 parts[index] = self.NUMBERS[int(token)]
             elif isorder(token):
                 parts[index] = self.ORDERS[token]
 
-        print parts
+        ##print parts
         result = ''.join(parts).rstrip()
 
         # Finally, squash any sequence of whitespace into a single space
@@ -154,7 +154,7 @@ class Speller(object):
 
 def _expand_body(body, mapping, callback):
     """Produce a spelling given a rule and a mapping of its vars"""
-    ####print mapping
+    ######print mapping
     body = body.replace('}', '!}')
 
     result = []
@@ -173,9 +173,9 @@ def _expand_body(body, mapping, callback):
         index = result.index(raw_token)
         spelling = callback(token, order)
         if spelling:
-            ####print result
-            ####print spelling
-            ####print '***'
+            ######print result
+            ######print spelling
+            ######print '***'
             result = result[:index] + spelling + result[index+1:]
         else:
             result.pop(index)
@@ -265,25 +265,3 @@ class _Rule(object):
 # END OF MODULE
 
 
-def _run_tests():
-    import subprocess
-    subprocess.call(['python', 'test.py'])
-
-def _main_cli():
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Spell integers in various languages')
-    parser.add_argument('num', metavar='number', nargs='?', type=int, help="an integer to spell")
-    parser.add_argument('--lang', '-l', type=str, default='en', help="language code in ISO 639-1 format")
-    parser.add_argument('--test', '-t', action='store_const', const=True, default=False, help="run unit-tests and exit")
-    args = parser.parse_args()
-
-    if args.test or not args.num:
-        _run_tests()
-        return
-
-    speller = Speller(args.lang)
-    print '*%s*' % speller.spell(args.num)
-
-if __name__ == '__main__':
-    _main_cli()

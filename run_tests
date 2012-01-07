@@ -12,6 +12,6 @@ else
     echo "Testing listparse..."
     python "test/test_listparse.py"
 
-    echo "Testing spellnum..."
-    python "test/test_spellnum.py"
+    echo "Testing numspell..."
+    python "test/test_numspell.py"
 fi

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Spanish rules and tables for the spellnum module"""
+"""Spanish rules and tables for the numspell module"""
 
 RULES = """
 ab = {a0} y {b}

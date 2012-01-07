@@ -2,7 +2,7 @@
 """A test suite for the listparse module"""
 
 import unittest
-from spellnum import listparse
+from numspell import listparse
 
 
 ORDERS = ['', 'millón', 'billón', 'trillón']

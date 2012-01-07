@@ -1,4 +1,4 @@
-"""English rules and tables for the spellnum module"""
+"""English rules and tables for the numspell module"""
 
 RULES = """
 ab = {a0}-{b}

@@ -1,5 +1,5 @@
 import unittest
-from spellnum.squash import squash
+from numspell.squash import squash
 
 
 def isint(x):
