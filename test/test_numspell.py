@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-import spellnum
+import numspell
 
 
 LANGUAGES = ['en', 'es', 'ja', 'ru']
@@ -8,7 +8,7 @@ LANGUAGES = ['en', 'es', 'ja', 'ru']
 
 def build_setup(lang):
     def setup(self):
-        self.speller = spellnum.Speller(lang)
+        self.speller = numspell.Speller(lang)
     return setup
 
 def build_test(num, spelling):

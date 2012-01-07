@@ -19,7 +19,7 @@ class Speller(object):
 
         """
         spelling_mod = "spelling_" + lang
-        package = __import__("spellnum", fromlist=[spelling_mod])
+        package = __import__("numspell", fromlist=[spelling_mod])
         module = getattr(package, spelling_mod)
 
         rules = filter(bool, (x.strip() for x in module.RULES.splitlines()))
@@ -265,25 +265,3 @@ class _Rule(object):
 # END OF MODULE
 
 
-def _run_tests():
-    import subprocess
-    subprocess.call(['python', 'test.py'])
-
-def _main_cli():
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Spell integers in various languages')
-    parser.add_argument('num', metavar='number', nargs='?', type=int, help="an integer to spell")
-    parser.add_argument('--lang', '-l', type=str, default='en', help="language code in ISO 639-1 format")
-    parser.add_argument('--test', '-t', action='store_const', const=True, default=False, help="run unit-tests and exit")
-    args = parser.parse_args()
-
-    if args.test or not args.num:
-        _run_tests()
-        return
-
-    speller = Speller(args.lang)
-    print '*%s*' % speller.spell(args.num)
-
-if __name__ == '__main__':
-    _main_cli()
