@@ -18,7 +18,9 @@ class Speller(object):
             lang -- language code in ISO 639-1 format
 
         """
-        module = __import__("spelling_" + lang)
+        spelling_mod = "spelling_" + lang
+        package = __import__("spellnum", fromlist=[spelling_mod])
+        module = getattr(package, spelling_mod)
 
         rules = filter(bool, (x.strip() for x in module.RULES.splitlines()))
         self.RULES = [_Rule(x) for x in rules]
