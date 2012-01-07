@@ -174,11 +174,12 @@ class Body(object):
 
         def repl_fn(m):
             fn = lambda token: meta[token.name + "~replace"](token.value)
-            wrappers = filter(bool, m.group(1).split(':'))
-            for w in wrappers:
+            wrappers = m.group(1).split(':')
+            for w in wrappers[1:]:
                 fn = wrap_fn(meta[w], fn)
             self.format_list.append(fn)
-            return "{}"
+            index_str = wrappers[0]
+            return "{%s}" % index_str
 
         # Here we look at each substitution token enclosed in { and }. Inside
         # repl_fn, we gather all of the modifiers into a single function using
