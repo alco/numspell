@@ -1,15 +1,17 @@
 #!/bin/sh
 
+PYTHONPATH="`dirname $0`:$PYTHONPATH"
+
 if [ $# -ne 0 ]; then
     echo "Testing $1..."
-    PYTHONPATH=spellnum/:$PYTHONPATH python "test/test_$1.py"
+    python "test/test_$1.py"
 else
     echo "Testing squash..."
-    PYTHONPATH=spellnum/:$PYTHONPATH python "test/test_squash.py"
+    python "test/test_squash.py"
 
     echo "Testing listparse..."
-    PYTHONPATH=spellnum/:$PYTHONPATH python "test/test_listparse.py"
+    python "test/test_listparse.py"
 
     echo "Testing spellnum..."
-    PYTHONPATH=spellnum/:$PYTHONPATH python "test/test_spellnum.py"
+    python "test/test_spellnum.py"
 fi
