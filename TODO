@@ -1,5 +1,12 @@
 This file contains notes to self, just so that I don't forget them later on.
 
+* Fix the numbering in format_str in Body
+
+  Currently, we'll get an incorrect result when trying to use a rule like the
+  following one.
+
+    whatever <matcher> = {0} {0:mod1} {0:mod2}
+
 * Refactor unit tests for listparse and squash.
 
   Having a unified style of writing tests is helpful for attracting
