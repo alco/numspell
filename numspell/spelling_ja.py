@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Japanese rules and tables for the spellnum module"""
+"""Japanese rules and tables for the numspell module"""
 
 RULES = """
 1x = 十{x}

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Russian rules and tables for the spellnum module"""
+"""Russian rules and tables for the numspell module"""
 
 RULES = """
 ab = {a0} {b}
