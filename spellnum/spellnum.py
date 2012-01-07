@@ -44,8 +44,11 @@ class Speller(object):
     def spell(self, num):
         """Return the spelling of the given integer
 
-        num   -- the number to spell
-        order -- specifies the power of 1000 which is appended to the number
+        Arguments:
+          num   -- the number to spell
+
+        Return value:
+          A string with the num's spelling.
 
         """
 
