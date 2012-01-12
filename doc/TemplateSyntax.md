@@ -1,6 +1,4 @@
-## The Format String ##
-
-The format string in general looks like this:
+The template string has the following structure:
 
     <pattern> = <body>
 
@@ -9,26 +7,26 @@ between them.
 
 ### The Pattern Syntax ###
 
-The pattern contains a list of tokens separated by whitespace. Each token can be
-one of the following:
+The pattern contains a list of tokens separated by whitespace. Each token can
+be one of the following:
 
-* one of the special tokens ('^', '$', etc.)
-* a regular expression, or a regex literal (r'\s+')
-* a matcher (<matcher_name>)
+* one of the special tokens (`^` or `$`)
+* a literal token, that is, a simple string with no whitespace
+* a matcher (&lt;matcher_name&gt;)
 
-There are two special tokens. The first one is **the caret (^)**. It can be used
-in a pattern only once and only as the first element. It doesn't match any
-elements in the list, but it has a special meaning "match only at the beginning
-of the list".
+There are two special tokens. One is _the caret_ (`^`). It can be used in a
+pattern only once and only as the first element. It doesn't match any elements
+in the list, but it has a special meaning "match only at the beginning of the
+list".
 
-The **dolar sign ($)**, in a similar manner, is used to match only at the end of
-the list. It can only appear once and only at the end of the pattern.
+The _dolar sign_ (`$`), in a similar manner, is used to match only at the end
+of the list. It can only appear once and only at the end of the pattern.
 
-A **matcher** is a string enclosed in angle brackets ('<' and '>'). The string
+A _matcher_ is a string enclosed in angle brackets (`<` and `>`). The string
 itself generally should not contain spaces. For each matcher token in the
-pattern there has to be at list one corresponding key in the `meta` dictionary
-which is passed to the constructor of LispObject. The key is built by append the
-string "~find" to the name of the token. See examples below.
+pattern there has to be at list one corresponding key in the meta-dictionary
+which is passed to the constructor of `Parser`. The key is built by appending
+"~find" to the name of the token. See examples below.
 
 ### Pattern Examples ###
 
