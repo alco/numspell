@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Parse options
+while getopts "hv" opt; do
+  case $opt in
+    v)
+      options="-v"
+      ;;
+    h)
+      echo "Usage: run_test [-v] [PATTERN]"
+      exit 0
+      ;;
+    \?)
+      exit 1
+      ;;
+  esac
+done
+
+# Parse positional arguments and build the final
+# argument list with options
+shift $(( OPTIND-1 ))
+if [ $# -ne 0 ]; then
+    options="$options -p *$@*"
+fi
+
+python -m unittest discover -s test $options
