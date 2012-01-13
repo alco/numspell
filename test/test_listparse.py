@@ -185,7 +185,7 @@ class TestSubstitution(unittest.TestCase):
 
     def test_modifier(self):
         self.build_test(
-            "^ <lookup> <order> = {:pl} {:pl_2}",  #"^ x <order> = _ {0:pl} {0:pl_2}",
+            "^ <lookup> <order> = {:pl} {:pl_2}",
             meta=meta,
             good_inputs=[
                 (['1', 1], (['un .'], [(0, 2)])),
@@ -215,6 +215,19 @@ class TestSubstitution(unittest.TestCase):
                 ['21', '1'],
                 [' 1 ', 'mil'],
                 ['mil', '1'],
+            ])
+
+        self.build_test(
+            "^ x <order> = _ {0} {0:pl} {0:pl:pl_2}",
+            meta=meta,
+            good_inputs=[
+                (['x', 1], (['_ millón millones millonesa'], [(0, 2)])),
+                (['x', 'mil'], (['_ mil mil .'], [(0, 2)])),
+            ],
+            bad_inputs=[
+                ['', 'x', 1],
+                ['x', '1'],
+                [1],
             ])
 
     def test_combined(self):
