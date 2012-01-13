@@ -11,7 +11,7 @@ Template string has the following structure:
 
     <pattern> = <body>
 
-That is, it consists of two parts--a pattern and a body--with an equals sign
+That is, it consists of two parts—a pattern and a body—with an equals sign
 between them.
 
 
@@ -37,9 +37,9 @@ A _matcher_ is a string enclosed in angle brackets (`<` and `>`). The string
 itself generally should not contain spaces. For each matcher token in the
 pattern there has to be at least one entry in the meta-dictionary which is
 passed to the constructor of `Parser`. The key of the entry is built by
-appending "~find" to the name of the matcher token. The value is a function
+appending _~find_ to the name of the matcher token. The value is a function
 that accepts one argument and returns `True` or `False`. Every time a list
-element is matched against the matcher token, the token's "~find" function gets
+element is matched against the matcher token, the token's _~find_ function gets
 passed that list element as an argument.
 
 Lastly, a literal token or a matcher can be enclosed in parentheses (`(` and
@@ -58,7 +58,8 @@ captured by the pattern part of the template, thus becoming a new list element.
 
 A _substitution token_ in the simplest case is written as `{}`. You may specify
 an index like in `{0}`. If you specify an index for one of the tokens, every
-other token must also have an index (similar to the Python's format string).
+other token must also have an index (this is similar to the Python's `format`
+syntax).
 
 Each substitution token in the body corresponds to one matcher token in the
 pattern. Apart from indices, you may also specify _modifiers_ to transform the
@@ -72,12 +73,12 @@ A few examples of substitution tokens:
 * `{:mod1} {:mod2}` (same as `{0:mod1} {1:mod2}`)
 * `{:mod1:mod2}` (same as `{0:mod1:mod2}`)
 
-In the last example two modifiers are combined in one token. Multiple modifiers
-are applied from the inside out (or from left to right). That is, the original
-string for substitution will be passed as an argument to the `mod1` function.
-Then the return value of `mod1` will be passed to the `mod2` function. The
-return value of the latter will replace the whole token in the final body of
-the template.
+In the last example two modifiers are combined within one token. Multiple
+modifiers are applied from the inside out (or from left to right). That is, the
+original string for substitution will be passed as an argument to the `mod1`
+function.  Then the return value of `mod1` will be passed to the `mod2`
+function. The return value of the latter will replace the whole token in the
+final body of the template.
 
 Modifier functions are passed to the parser via the meta-dictionary. For each
 modifier there is a dictionary entry with key being the modifier name (like
@@ -101,10 +102,12 @@ meta = {
 
     "plural": lambda x: x + "s"
 }
-parser = listparse.Parser("^ (<gt_1>) <order> = {:plural}", meta=meta)
 
-parser.sub(['2', 1])[0]    # -> ['2', 'thousands']    (1)
-parser.sub(['10', 2])[0]   # -> ['10', 'millions']    (2)
+parser = listparse.Parser("^ (<gt_1>) <order> = {:plural}", meta=meta)
+parser.sub(['2', 1])[0]        # (1)
+# ['2', 'thousands']
+parser.sub(['10', 2])[0]       # (2)
+# ['10', 'millions']
 ```
 
 Here we use the caret anchor, two matchers, and one modifier.
@@ -112,16 +115,16 @@ Here we use the caret anchor, two matchers, and one modifier.
 The caret makes sure that the pattern will match only at the beginning of a
 list. So, for example, the list `['', '2', 1]` will not match the pattern.
 
-The first matcher `&lt;gt_1&gt;` is enclosed in parentheses which makes it a
-phantom token. It will be matched against, but it won't be replaced during
-substitution. That is why we only provide the "gt_1~find" function without a
-complementary "gt_1~replace" function.
+The first matcher `<gt_1>` is enclosed in parentheses which makes it a phantom
+token. It will be matched against, but it won't be replaced during
+substitution. That is why we only provide the _gt_1~find_ function without a
+complementary _gt_1~replace_ function.
 
-When the substitution token `{:plural}` is expanded, the "order~replace"
-function is called first. It gets passed `1` in the case of (1) and `2` in the
-case of (2). It returns `thousand` and `million` respectively. Then the return
-value is passed to the "plural" function to obtain `thousands` for the first
-case and `millions` for the second one.
+When the substitution token `{:plural}` is expanded, the _order~replace_
+function is called first. It gets passed **1** in the case of (1) and **2** in
+the case of (2). It returns "thousand" and "million" respectively. Then the
+return value is passed to the `plural` modifier to obtain "thousands" for the
+first case and "millions" for the second one.
 
 ---
 
@@ -131,8 +134,8 @@ string:
 
 ```python
 parser = listparse.Parser("<order> = {0} {0:plural}", meta=meta)
-
-parser.sub(['a', 1, 'b'])[0]   # -> ['a', 'thousand thousands', 'b']
+parser.sub(['a', 1, 'b'])[0]
+# ['a', 'thousand thousands', 'b']
 ```
 
 This time we're using a single matcher in the pattern. Since there are no
@@ -140,8 +143,8 @@ anchors, it will match anywhere in a list like the example demonstrates.
 
 In the body of the template we must use explicit indices. Otherwise, the parser
 would insert indices automatically and we would end up with an invalid body:
-`{0} {1:plural}`. There is only one matcher token, so using the index `1` would
-trigger an error.
+`{0} {1:plural}`. There is only one matcher token, so using the index **1**
+would trigger an error.
 
 The actual processing performed to obtain the final result is the same as in
 the previous example. The first substitution token (`{0}`) is used as is, while
