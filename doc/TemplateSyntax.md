@@ -1,17 +1,23 @@
-The template string has the following structure:
+This document describes the syntax of template string used by the **listparse**
+module.
+
+## The Basic Structure ##
+
+Template string has the following structure:
 
     <pattern> = <body>
 
 That is, it consists of two parts--a pattern and a body--with an equals sign
 between them.
 
-### The Pattern Syntax ###
+
+## The Pattern Syntax ##
 
 The pattern contains a list of tokens separated by whitespace. Each token can
 be one of the following:
 
 * one of the special tokens (`^` or `$`)
-* a literal token, that is, a simple string with no whitespace
+* a literal token (a simple string with no whitespace)
 * a matcher (&lt;matcher_name&gt;)
 
 There are two special tokens. One is _the caret_ (`^`). It can be used in a
@@ -24,11 +30,19 @@ of the list. It can only appear once and only at the end of the pattern.
 
 A _matcher_ is a string enclosed in angle brackets (`<` and `>`). The string
 itself generally should not contain spaces. For each matcher token in the
-pattern there has to be at list one corresponding key in the meta-dictionary
-which is passed to the constructor of `Parser`. The key is built by appending
-"~find" to the name of the token. See examples below.
+pattern there has to be at least one entry in the meta-dictionary which is
+passed to the constructor of `Parser`. The key of the entry is built by
+appending "~find" to the name of the matcher token. The value is a function
+that accepts one argument and returns `True` or `False`. Every time a list
+element is matched against the matcher token, the token's "~find" function gets
+passed that list element as an argument.
 
-### Pattern Examples ###
+
+## The Body Syntax
+
+
+
+## Pattern Examples ##
 
     ^ 1 two 'and three' = ...
 
