@@ -123,8 +123,6 @@ API, take a look at its help:
     >>> import numspell
     >>> help(numspell)
 
----
-
 If, however, you would like to dive deeper and find out how you can add a new
 spelling language, port the spelling algorithm to another programming language
 or contribute to the project in some other way, take a look at developer
