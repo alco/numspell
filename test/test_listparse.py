@@ -166,6 +166,29 @@ class TestSubstitution(unittest.TestCase):
                ['1', 'a', 'b'],
                ['', 'a', 'b', 'c'],
             ])
+
+        self.build_test(
+            "(<gt_1>) <order> = {:pl}",
+            meta=meta,
+            good_inputs=[
+                (['.', '2', 1, '.'], (['.', '2', 'millones', '.'], [(2, 3)])),
+                (['10', 2], (['10', 'billones'], [(1, 2)])),
+            ],
+            bad_inputs=[
+                ['1', 1],
+                ['0', 'mil'],
+            ])
+
+        self.build_test(
+            "^ (<gt_1>) <order> = {:pl}",
+            meta=meta,
+            good_inputs=[
+                (['2', 1], (['2', 'millones'], [(1, 2)])),
+            ],
+            bad_inputs=[
+                ['', '2', 'mil'],
+            ])
+
     def test_matcher(self):
         self.build_test(
             "<lookup> <order> = {} {}",

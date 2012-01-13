@@ -154,7 +154,7 @@ class Pattern(object):
                     insets[0] += 1
                 else:
                     insets[1] -= 1
-            else:
+            elif type(token) is not AnchorToken:
                 left_side = False
             self.tokens.append(token)
             if (not isphantom) and (not isliteral(token)):
