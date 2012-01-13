@@ -40,6 +40,18 @@ passed that list element as an argument.
 
 ## The Body Syntax
 
+The body is a string with optional substitution tokens. After expanding all of
+the tokens (if any) the resulting string replaces the group of list elements
+captured by the pattern part of the template, thus becoming a new list element.
+
+A _substitution token_ is similar to that of the Python's format string. In the
+simplest case it is written as `{}`. You can include an explicit index like in
+`{0}`. If you write index for one of the tokens, every other token must also
+have an index (similar to the Python's format string).
+
+Apart from indices, you may also specify _modifiers_ to transform substituted
+strings. A modifier is a function which takes one argument (a list element) and
+returns a string.
 
 
 ## Pattern Examples ##
