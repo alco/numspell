@@ -1,5 +1,9 @@
-This document describes the syntax of template string used by the **listparse**
-module.
+Template String Syntax
+======================
+
+This document describes the template string syntax as defined by the
+**listparse** module.
+
 
 ## The Basic Structure ##
 
@@ -19,6 +23,7 @@ be one of the following:
 * one of the special tokens (`^` or `$`)
 * a literal token (a simple string with no whitespace)
 * a matcher (&lt;matcher_name&gt;)
+* a phantom token (either literal token or a matcher enclosed in parentheses)
 
 There are two special tokens. One is _the caret_ (`^`). It can be used in a
 pattern only once and only as the first element. It doesn't match any elements
@@ -37,6 +42,13 @@ that accepts one argument and returns `True` or `False`. Every time a list
 element is matched against the matcher token, the token's "~find" function gets
 passed that list element as an argument.
 
+Lastly, a literal token or a matcher can be enclosed in parentheses (`(` and
+`)`) to turn it into a phantom token. A phantom token makes no difference when
+matching against the pattern, i.e. `(literal) (<matcher>)` will match the same
+sequence as `literal <matcher>` does. However, when it comes to expanding the
+body part of the template, phantom tokens are not taken into account like if
+they weren't specified at all.
+
 
 ## The Body Syntax
 
@@ -44,69 +56,93 @@ The body is a string with optional substitution tokens. After expanding all of
 the tokens (if any) the resulting string replaces the group of list elements
 captured by the pattern part of the template, thus becoming a new list element.
 
-A _substitution token_ is similar to that of the Python's format string. In the
-simplest case it is written as `{}`. You can include an explicit index like in
-`{0}`. If you write index for one of the tokens, every other token must also
-have an index (similar to the Python's format string).
+A _substitution token_ in the simplest case is written as `{}`. You may specify
+an index like in `{0}`. If you specify an index for one of the tokens, every
+other token must also have an index (similar to the Python's format string).
 
-Apart from indices, you may also specify _modifiers_ to transform substituted
-strings. A modifier is a function which takes one argument (a list element) and
-returns a string.
+Each substitution token in the body corresponds to one matcher token in the
+pattern. Apart from indices, you may also specify _modifiers_ to transform the
+string to be substituted. A modifier is a function which takes one argument (a
+list element) and returns a string. The modifier name is written after a colon.
 
+A few examples of substitution tokens:
 
-## Pattern Examples ##
+* `{0}`
+* `{} {}` (same as `{0} {1}`)
+* `{:mod1} {:mod2}` (same as `{0:mod1} {1:mod2}`)
+* `{:mod1:mod2}` (same as `{0:mod1:mod2}`)
 
-    ^ 1 two 'and three' = ...
+In the last example two modifiers are combined in one token. Multiple modifiers
+are applied from the inside out (or from left to right). That is, the original
+string for substitution will be passed as an argument to the `mod1` function.
+Then the return value of `mod1` will be passed to the `mod2` function. The
+return value of the latter will replace the whole token in the final body of
+the template.
 
-This pattern consists of four elements.
-
-1. The caret at the beginning signifies that the pattern will match only at the
-beginning of a given list.
-
-2. The literal string '1' will match an element '1'.
-
-3. The literal string 'two' will match an element 'two'. The quotes are omitted
-in the pattern because neither '1' nor 'two' have spaces in them.
-
-4. The literal string 'and three' will match a corresponding element in a given
-list.
-
-This pattern will match the following lists:
-
-    ['1', 'two', 'and three'], ['1', 'two', 'and three', 'bla', bla']
-
-It will not match lists like the following:
-
-    ['...', '1', 'two', 'and three']  # because the special token ^ will match
-                                      # only at the beginning of the list
-
-    ['', '1', 'two', 'and three']     # even an empty string or None is still
-                                      # considered a list element
-
-**Example 2**.
-
-    (1) <order> = ...
-
-The first element is a phantom element. It will be matched against, but left
-intact when it comes to substituting the body of the format string.
-
-The second element is a matcher. For it to work properly, there must be the
-"order~find" key in the `meta` dictoinary. The value for the key must be a
-function of one argument returning True or False.
-
-If our `meta` dictionary looked like this
-
-    meta = { "order~find": lambda x: type(x) is int }
-
-then the pattern defined above would match the following lists:
-
-    ['1', 2, 'bla'], ['bla', 'bla', '1', 1, 'bla']
-
-It will not, however, match the following lists:
-
-    [1, 2]      # the first element is an integer, not a string '1'
-    ['1', '2']  # the second element must be of type int in match against the
-                # <order> token
+Modifier functions are passed to the parser via the meta-dictionary. For each
+modifier there is a dictionary entry with key being the modifier name (like
+`mod1` and `mod2` in the examples above) and value being the function itself.
 
 
+## Examples ##
 
+Let's look at some code to familiarize ourselves with the workings of the
+**listparse** module.
+
+```python
+from numspell import listparse
+
+ORDERS = ['', 'thousand', 'million']
+meta = {
+    "gt_1~find": lambda x: (type(x) is str) and x.isdigit() and int(x) > 1,
+
+    "order~find": lambda x: type(x) is int,
+    "order~replace": lambda x: ORDERS[x],
+
+    "plural": lambda x: x + "s"
+}
+parser = listparse.Parser("^ (<gt_1>) <order> = {:plural}", meta=meta)
+
+parser.sub(['2', 1])[0]    # -> ['2', 'thousands']    (1)
+parser.sub(['10', 2])[0]   # -> ['10', 'millions']    (2)
+```
+
+Here we use the caret anchor, two matchers, and one modifier.
+
+The caret makes sure that the pattern will match only at the beginning of a
+list. So, for example, the list `['', '2', 1]` will not match the pattern.
+
+The first matcher `&lt;gt_1&gt;` is enclosed in parentheses which makes it a
+phantom token. It will be matched against, but it won't be replaced during
+substitution. That is why we only provide the "gt_1~find" function without a
+complementary "gt_1~replace" function.
+
+When the substitution token `{:plural}` is expanded, the "order~replace"
+function is called first. It gets passed `1` in the case of (1) and `2` in the
+case of (2). It returns `thousand` and `million` respectively. Then the return
+value is passed to the "plural" function to obtain `thousands` for the first
+case and `millions` for the second one.
+
+---
+
+Let's look at another example. Assume that we have the same meta-dictionary as
+in the example above. We will create a new parser with the following template
+string:
+
+```python
+parser = listparse.Parser("<order> = {0} {0:plural}", meta=meta)
+
+parser.sub(['a', 1, 'b'])[0]   # -> ['a', 'thousand thousands', 'b']
+```
+
+This time we're using a single matcher in the pattern. Since there are no
+anchors, it will match anywhere in a list like the example demonstrates.
+
+In the body of the template we must use explicit indices. Otherwise, the parser
+would insert indices automatically and we would end up with an invalid body:
+`{0} {1:plural}`. There is only one matcher token, so using the index `1` would
+trigger an error.
+
+The actual processing performed to obtain the final result is the same as in
+the previous example. The first substitution token (`{0}`) is used as is, while
+the second one is transformed by the `plural` modifier.
