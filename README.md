@@ -57,7 +57,7 @@ Optional arguments:
       Useful for debugging purposes and to get to know the algorithm behind
       the process.
 
-  --lang=LANG
+  -l LANG, --lang=LANG
       Language code in ISO 639-1 format. Default: en.
 
       Specify the language to spell with or to use when checking the user-
@@ -73,7 +73,7 @@ Optional arguments:
         ru (Russian)
         uk (Ukrainian)
 
-  --check=<spelling>
+  -c <spelling>, --check=<spelling>
       Provide your own spelling for numspell to check and correct.
 
       If the spelling is correct, exit with 0 status code. If the spelling is
