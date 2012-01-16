@@ -86,15 +86,15 @@ After decomposing the number **1,000,000** into components, we'll get a list
 index into the `ORDERS` list which would yield the word _millón_. Once we have
 this list, we can analyze it. If we had a rule saying
 
-    if you encounter the numeral 1 and an order immediately following it, spell
-    the 1 as _un_
+    if you encounter the numeral '1' and an order immediately following it,
+    spell '1' as _un_
 
 it would solver the problem!
 
 In a similar fashion, if we had a rule saying
 
-    if you encounter an order preceded by a numeral greater than 1, spell it in
-    plural form
+    if you encounter an order preceded by a numeral greater than '1', spell it
+    in plural form
 
 we would get the correct spelling for huge numbers like millions, billions,
 etc.
