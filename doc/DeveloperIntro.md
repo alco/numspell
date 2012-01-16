@@ -99,7 +99,7 @@ In a similar fashion, if we had a rule saying
 we would get the correct spelling for huge numbers like millions, billions,
 etc.
 
-**numspell** allows you to define such rules using a template string that will
-act upon a list and transform its elements according to those rules. See the
-docstring of the **listparse** submodule and the _TemplateSyntax.md_ file for
-the detailed information on the subject.
+The **listparse** submodule allows you to define such rules using a template
+string that will act upon a list and transform its elements according to those
+rules. See the submodule's docstring and the _TemplateSyntax.md_ file for the
+detailed information on the subject.
