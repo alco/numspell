@@ -154,5 +154,5 @@ brief overview of the documentation files:
 
 ## License ##
 
-**numspell** is Copyright (c) 2012 Alexei Sholik. See the LICENSE file for the
-full license text.
+**numspell** is Copyright (c) 2012 Alexei Sholik. It is distributed under the
+terms of the MIT license. See the LICENSE file for the full license text.
