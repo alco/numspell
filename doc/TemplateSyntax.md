@@ -50,7 +50,7 @@ body part of the template, phantom tokens are not taken into account like if
 they weren't specified at all.
 
 
-## The Body Syntax
+## The Body Syntax ##
 
 The body is a string with optional substitution tokens. After expanding all of
 the tokens (if any) the resulting string replaces the group of list elements

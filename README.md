@@ -143,10 +143,10 @@ brief overview of the documentation files:
 * _SpellingAlgorithm.md_ outlines the steps of the spelling algorithm and
   explains how each step is implemented.
 
-* _RuleSyntax.md_ represents a reference of the syntax for defining rules by
-  which a number is decomposed into logical elements.
+* _RuleSyntax.md_ explains the syntax for defining rules by which a number is
+  decomposed into logical elements.
 
-* _TemplateSyntax.md_ is a reference of the template string syntax used by the
+* _TemplateSyntax.md_ explains the template string syntax used by the
   **listparse** submodule. It allows to transform the logical elements of a
   number to adjust for possible exceptions and irregularities of a particular
   human language.
