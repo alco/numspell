@@ -84,9 +84,20 @@ part first, we'll deal with the plural form later.
 After decomposing the number **1,000,000** into components, we'll get a list
 `['1', 1]` where '1' can be replaced with one lookup and **1** denotes the
 index into the `ORDERS` list which would yield the word _millón_. Once we have
-this list, we can analyze it. If we had a rule saying "if you encounter the
-numeral **1** and an order immediately following it, spell the **1** as _un_.",
+this list, we can analyze it. If we had a rule saying
+
+    if you encounter the numeral 1 and an order immediately following it, spell
+    the 1 as _un_
+
 it would solver the problem!
+
+In a similar fashion, if we had a rule saying
+
+    if you encounter an order preceded by a numeral greater than 1, spell it in
+    plural form
+
+we would get the correct spelling for huge numbers like millions, billions,
+etc.
 
 **numspell** allows you to define such rules using a template string that will
 act upon a list and transform its elements according to those rules. See the
