@@ -133,6 +133,24 @@ documentation in the _doc_ directory.
 
 The project will have a roadmap at some point in the future.
 
+The _doc_ directory contains developer documentation which describes the design
+and implementation of the modules that **numspell** is comprised of. Here's a
+brief overview of the documentation files:
+
+* _DeveloperIntro.md_ describes the goals, design decisions and high-level
+  architecture of the project.
+
+* _SpellingAlgorithm.md_ outlines the steps of the spelling algorithm and
+  explains how each step is implemented.
+
+* _RuleSyntax.md_ represents a reference of the syntax for defining rules by
+  which a number is decomposed into logical elements.
+
+* _TemplateSyntax.md_ is a reference of the template string syntax used by the
+  **listparse** submodule. It allows to transform the logical elements of a
+  number to adjust for possible exceptions and irregularities of a particular
+  human language.
+
 
 ## License ##
 
