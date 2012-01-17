@@ -19,11 +19,6 @@ This file contains notes to self, just so that I don't forget them later on.
   Probably should also make it a method
 
 
-* Refactor `_pattern_match` function
-
-  Probably make it a method of the Rule class
-
-
 * Implement the **literal string** with spaces for the `listparse` module
 
   A **literal string** is any sequence of characters, usually enclosed in single

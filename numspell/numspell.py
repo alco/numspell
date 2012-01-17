@@ -146,7 +146,7 @@ class Speller(object):
             result = [numstr]
         else:
             rule = _first_match(numstr, self.RULES)
-            mapping = _pattern_match(rule.pattern, numstr, order)
+            mapping = rule.bind(numstr, order)
             result = _expand_body(rule.body, mapping, self._parse_num)
 
         return result + (order and [self.ORDER_SEP, order] or [])
@@ -214,48 +214,47 @@ def _first_match(numstr, rules):
 
     raise Exception('Could not find a suitable rule for the number %s' % numstr)
 
-def _pattern_match(pattern, numstr, order):
-    """Return a mapping for variables given the numstr"""
 
-    def rsplit_index(s, index):
-        return s[:-index], s[len(s)-index:]
+def rule_from_str(string):
+    """Return a new instance of a rule
 
-    mapping = {}
+    The type of the rule is determined based on the string contents
+
+    """
+    pattern, body = [x.strip() for x in string.split('=')]
     if pattern.find(')') > 0:
-        left, right = pattern[1:].split(')')  # deconstruct the pattern '(a)xxx'
-        lnum, rnum = rsplit_index(numstr, len(right))
-        mapping[left] = [lnum, order+1]
-        mapping.update(_pattern_match(right, rnum, order))
-        return mapping
-
+        assert pattern.find('(') >= 0
+        return RecursiveRule(pattern, body)
     if pattern.find('-') > 0:
-        dcount = pattern.count('-')
-        lendiff = len(pattern) - len(numstr)
-        varname = pattern[pattern.find('-') - 1]
-        pattern = pattern.replace('-', varname, dcount - lendiff)
-        pattern = pattern.replace('-', '')
+        return MultiRule(pattern, body)
+    return Rule(pattern, body)
+
+def resolve_bindings(pattern, numstr):
+    mapping = {}
     for (var, digit) in zip(pattern, numstr):
         if not var.isdigit():
             mapping[var] = mapping.get(var, 0) * 10 + int(digit)
     return mapping
 
 
-def rule_from_str(string):
-    pattern, body = [x.strip() for x in re.split(r'\s*=\s*', string)]
-    if pattern.find(')') > 0:
-        return RecursiveRule(pattern, body)
-    if pattern.find('-') > 0:
-        return MultiRule(pattern, body)
-    return Rule(pattern, body)
-
-
 class Rule(object):
+    """The base class for different rule types
+
+    Implements the common functionality for all rule types.
+
+    """
+
     def __init__(self, pattern, body):
         self.pattern = pattern
         self.body = body
 
     def matches(self, num):
+        """Return True if the rule's pattern matches num"""
         return len(self.pattern) == len(num) and self._compare_digits(num)
+
+    def bind(self, numstr, order):
+        """Return a dict with variable bindings"""
+        return resolve_bindings(self.pattern, numstr)
 
     def _compare_digits(self, num):
         for (char, digit) in zip(self.pattern, num):
@@ -265,19 +264,40 @@ class Rule(object):
 
 
 class RecursiveRule(Rule):
+    """A rule is called recursive if its pattern contains parentheses"""
+
     def matches(self, num):
         return self._chopped_len() < len(num)
+
+    def bind(self, numstr, order):
+        def rsplit_index(s, index):
+            return s[:-index], s[len(s)-index:]
+
+        left, right = self.pattern[1:].split(')')
+        lnum, rnum = rsplit_index(numstr, len(right))
+        mapping = resolve_bindings(right, rnum)
+        mapping[left] = [lnum, order+1]
+        return mapping
 
     def _chopped_len(self):
         return len(self.pattern) - self.pattern.rindex(')') - 1
 
 
 class MultiRule(Rule):
+    """A rule is called a multi-rule if its pattern has at least one dash"""
+
     def __init__(self, pattern, body):
         Rule.__init__(self, pattern, body)
         dash_count = pattern.count('-')
-        pattern_len = len(pattern)
-        self.len_range = range(pattern_len - dash_count, pattern_len + 1)
+        self.len_range = range(len(pattern) - dash_count, len(pattern) + 1)
+        self.pattern = pattern.replace('-', '')
 
     def matches(self, num):
         return len(num) in self.len_range and self._compare_digits(num)
+
+    def bind(self, numstr, order):
+        # Clone the leftmost variable a number of times so that the pattern
+        # length becomes equal to len(numstr)
+        pattern = (self.pattern[0] * (1 + len(numstr) - self.len_range[0])
+                   + self.pattern[1:])
+        return resolve_bindings(pattern, numstr)
