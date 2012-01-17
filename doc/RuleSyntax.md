@@ -28,9 +28,11 @@ bindings
     a = 1
     x = 88
 
-If we tried to match this pattern against **11023**, we would not get a match
+If we tried to match this pattern against **11088**, we would not get a match
 because the number's digit **0** (the third digit from the left) differs from
 the pattern's corresponding digit **2**.
+
+### Consuming Patterns ###
 
 There is also a way to match against a number with variable number of digits.
 This can be achieved by using a _consuming pattern_. When the leftmost variable
@@ -66,6 +68,42 @@ of the resulting variable bindings:
 
 Consuming patterns are useful when dealing with numbers starting from 1000 and
 up to infinity.
+
+### Multi-patterns ###
+
+In practical use it may be necessary to employ a series of rules with patterns
+that differ very little.
+
+Let's write the rules for the Spanish language using the knowledge we have
+obtained so far. The body syntax is not important at the moment, it is
+explained in the next section.
+
+    ab = {a0} y {b}                (1)
+    axx = {a00} {x}                (2)
+    axxx = {a} {1000} {x}          (3)
+    aaxxx = {a} {1000} {x}         (4)
+    aaaxxx = {a} {1000} {x}        (5)
+    (a)xxxxxx = {a} {x}            (6)
+
+The patterns of the rules 3—5 look almost the same and their bodies are exactly
+the same. There is actually a syntax aimed at eliminating this redundancy. We
+can replace the rules 3—5 with a single rule
+
+    a--xxx = {a} {1000} {x}
+
+Speaking more formally, the dash (`-`) in a pattern represents either nothing
+or a variable or digit it follows, depending on the number we're trying to
+match against.
+
+So, using this piece of syntactic sugar we can rewrite the rules for Spanish in
+the following way:
+
+    ab = {a0} y {b}
+    axx = {a00} {x}
+    a--xxx = {a} {1000} {x}
+    (a)xxxxxx = {a} {x}
+
+In this way we end up with 4 rules instead of 6.
 
 
 ## The Body Syntax ##
