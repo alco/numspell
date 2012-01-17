@@ -178,18 +178,26 @@ class Body(object):
             for w in wrappers[1:]:
                 fn = wrap_fn(meta[w], fn)
             self.format_list.append(fn)
+
             index_str = wrappers[0]
-            return "{%s}" % index_str
+            if index_str:
+                index = int(index_str)
+            else:
+                index = len(self.format_indices)
+            self.format_indices.append(index)
+            return "{}"
 
         # Here we look at each substitution token enclosed in { and }. Inside
         # repl_fn, we gather all of the modifiers into a single function using
-        # wrap_fn.  Then this function is appended to the format_list.
+        # wrap_fn. Then this function is appended to the format_list.
         self.format_list = []
+        self.format_indices = []
         self.format_str = re.sub(r'{(.*?)}', repl_fn, body)
 
     def format(self, tokens):
         """Returns a final string after substituting token values"""
-        format_args = [f(x) for f, x in zip(self.format_list, tokens)]
+        mapped_tokens = map(lambda i: tokens[i], self.format_indices)
+        format_args = [f(x) for f, x in zip(self.format_list, mapped_tokens)]
         return self.format_str.format(*format_args)
 
 

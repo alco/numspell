@@ -253,6 +253,21 @@ class TestSubstitution(unittest.TestCase):
                 [1],
             ])
 
+        self.build_test(
+            "^ <lookup> <gt_1> <order> = {0} {0:pl_2} {2} {1} {2:pl:pl_2}",
+            meta=meta,
+            good_inputs=[
+                (['1', '2', 1], (['un . millón dos millonesa'], [(0, 3)])),
+            ])
+
+        self.build_test(
+            "^ <lookup> <gt_1> <order> = {1} {2:pl} {0} {0} {2:pl:pl_2}",
+            meta=meta,
+            good_inputs=[
+                (['100', '11', 'mil'],
+                 (['once mil cien cien .'], [(0, 3)])),
+            ])
+
     def test_combined(self):
         self.build_test(
             "(<gt_1>) <order> <lookup> $ = {:pl} {}",
