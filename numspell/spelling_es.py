@@ -7,7 +7,6 @@ axx = {a00} {x}
 a--xxx = {a} {1000} {x}
 (a)xxxxxx = {a} {x}
 """
-##  'a--xxx = {a} mil {x}
 
 NUMBERS = {
     0: 'cero',
