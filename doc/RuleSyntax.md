@@ -44,9 +44,10 @@ For example, the pattern
 
     (a)bxx
 
-will match any number with 4 or more digits. Here are a few examples of
-matching the pattern against different numbers and of the resulting variable
-bindings:
+will match any number with 4 or more digits.
+
+Here are a few examples of matching the pattern against different numbers and
+of the resulting variable bindings:
 
     matching (a)bxx against 1000 yields
       a = 1
@@ -141,9 +142,9 @@ Let's take a look at the steps required to spell the number **1200001**.
    put there for clarity. It represents the number of recursive invocations
    that the algorithm stores automatically.
 
-5. Repeat the steps for each of the expansions. The second one is trivial.  The
-   matching rule for the first expansion is again the recursive rule `(a)xxx =
-   {a} {x}`.
+5. Repeat the steps for each of the expansions. The second expansion is
+   trivial. The matching rule for the first one is once again the recursive
+   rule `(a)xxx = {a} {x}`.
 
 6. The number **1200** will expand to `{1, 2} {200}` and, eventually, the whole
    body will become `{{1, 2} {2} hundred {0}, 1} {1}`.
@@ -154,7 +155,9 @@ table, whereas values for recursive expansions (those with a comma in our
 notation) are taken from the ORDERS list.
 
 In the English case, the NUMBERS table contains numbers 0—20, 30, 40, 50, 60,
-70, 80, 90. The ORDERS list looks like this:
+70, 80, and 90.
+
+The ORDERS list looks like this:
 
     ORDERS = ['', 'thousand', 'million', 'billion', ...]
 
@@ -179,8 +182,8 @@ as well be written as
     abc = {a} hundred {bc}
 
 Another thing worth mentioning is that `{0}` is only ever spelled when it is
-found all by itself. When it appears as a component of a larger number, it is
-transformed into an empty string.
+standing all by itself. When it appears as a component of a larger number, it
+is transformed into an empty string.
 
 The steps outlined above are ***not*** the exact steps of the spelling
 algorithm. The purpose of this document is to explain the rule syntax only. To
