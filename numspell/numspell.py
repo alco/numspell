@@ -230,6 +230,7 @@ def rule_from_str(string):
     return Rule(pattern, body)
 
 def resolve_bindings(pattern, numstr):
+    """Return a dict with variable bindings obtained from numstr"""
     mapping = {}
     for (var, digit) in zip(pattern, numstr):
         if not var.isdigit():
