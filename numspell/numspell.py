@@ -23,7 +23,7 @@ class Speller(object):
         module = getattr(package, spelling_mod)
 
         rules = filter(bool, (x.strip() for x in module.RULES.splitlines()))
-        self.RULES = [_Rule(x) for x in rules]
+        self.RULES = [rule_from_str(x) for x in rules]
 
         self.NUMBERS = module.NUMBERS
         self.ORDERS = module.ORDERS
@@ -227,30 +227,36 @@ def _pattern_match(pattern, numstr, order):
         lnum, rnum = rsplit_index(numstr, len(right))
         mapping[left] = [lnum, order+1]
         mapping.update(_pattern_match(right, rnum, order))
-    else:
-        for (var, digit) in zip(pattern, numstr):
-            if not var.isdigit():
-                mapping[var] = mapping.get(var, 0) * 10 + int(digit)
+        return mapping
+
+    if pattern.find('-') > 0:
+        dcount = pattern.count('-')
+        lendiff = len(pattern) - len(numstr)
+        varname = pattern[pattern.find('-') - 1]
+        pattern = pattern.replace('-', varname, dcount - lendiff)
+        pattern = pattern.replace('-', '')
+    for (var, digit) in zip(pattern, numstr):
+        if not var.isdigit():
+            mapping[var] = mapping.get(var, 0) * 10 + int(digit)
     return mapping
 
 
-class _Rule(object):
-    def __init__(self, rulestr):
-        def _split_rule(rule):
-            """Split the given rule into two parts and return a list"""
-            return [x.strip() for x in re.split(r'\s*=\s*', rule)]
+def rule_from_str(string):
+    pattern, body = [x.strip() for x in re.split(r'\s*=\s*', string)]
+    if pattern.find(')') > 0:
+        return RecursiveRule(pattern, body)
+    if pattern.find('-') > 0:
+        return MultiRule(pattern, body)
+    return Rule(pattern, body)
 
-        self.pattern, self.body = _split_rule(rulestr)
 
-        # Rules with parantheses in their pattern will be treated specially
-        # later on.
-        self.special = (self.pattern.find(')') > 0)
+class Rule(object):
+    def __init__(self, pattern, body):
+        self.pattern = pattern
+        self.body = body
 
     def matches(self, num):
-        if self.special:
-            return self._chopped_len() < len(num)
-        if len(self.pattern) == len(num):
-            return self._compare_digits(num)
+        return len(self.pattern) == len(num) and self._compare_digits(num)
 
     def _compare_digits(self, num):
         for (char, digit) in zip(self.pattern, num):
@@ -258,10 +264,21 @@ class _Rule(object):
                 return False
         return True
 
+
+class RecursiveRule(Rule):
+    def matches(self, num):
+        return self._chopped_len() < len(num)
+
     def _chopped_len(self):
-        assert(self.special)
         return len(self.pattern) - self.pattern.rindex(')') - 1
 
-# END OF MODULE
 
+class MultiRule(Rule):
+    def __init__(self, pattern, body):
+        Rule.__init__(self, pattern, body)
+        dash_count = pattern.count('-')
+        pattern_len = len(pattern)
+        self.len_range = range(pattern_len - dash_count, pattern_len + 1)
 
+    def matches(self, num):
+        return len(num) in self.len_range and self._compare_digits(num)

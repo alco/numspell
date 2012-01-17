@@ -19,34 +19,10 @@ This file contains notes to self, just so that I don't forget them later on.
   Probably should also make it a method
 
 
-* Review the `_Rule` class
-
-  I think it needs a slightly more advanced processing in the constructor, not
-  just setting the `special` flag.
-
-
 * Refactor `_pattern_match` function
 
-  This one is closely tied to the previous note.
+  Probably make it a method of the Rule class
 
-  One way to rule this out would be to make `_Rule` a base class. Two new
-  classes--`_RegularRule` and `_CyclingRule_`--will subclass from `_Rule`. Each
-  of those subclasses will then have its own `pattern_match` method.
-
-
-* Implement the 'a--xxx = {a} {1000} {x}' syntax in the RULES.
-
-  To me at least, this looks like a cleaner way than writing 3 slightly varying
-  rules.
-
-  The rules for Spanish would become:
-
-      RULES = """
-      ab = {a0} y {b}
-      axx = {a00} {x}
-      a--xxx = {a} {1000} {x}
-      (a)xxxxxx = {a} {x}
-     """
 
 * Implement the **literal string** with spaces for the `listparse` module
 

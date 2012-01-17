@@ -4,9 +4,7 @@
 RULES = """
 ab = {a0} y {b}
 axx = {a00} {x}
-axxx = {a} {1000} {x}
-aaxxx = {a} {1000} {x}
-aaaxxx = {a} {1000} {x}
+a--xxx = {a} {1000} {x}
 (a)xxxxxx = {a} {x}
 """
 ##  'a--xxx = {a} mil {x}
