@@ -67,9 +67,10 @@ of the resulting variable bindings:
       x = 21
 
 Consuming patterns are useful when dealing with numbers starting from 1000 and
-up to infinity.
+up to infinity. Keep in mind that consuming patterns must not contain digits,
+they work with variables only.
 
-### Multi-patterns ###
+### Multi-Patterns ###
 
 In practical use it may be necessary to employ a series of rules with patterns
 that differ very little.
