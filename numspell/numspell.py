@@ -2,7 +2,6 @@
 """
 
 import re
-from itertools import ifilter
 
 import listparse
 from squash import squash
@@ -192,7 +191,7 @@ def _first_match(numstr, rules):
     For a pattern to match a given number, it must comply with
     the following rules:
 
-      a) if it doesn't cotain parentheses:
+      a) if it doesn't contain parentheses:
 
          * it has the same number of characters (variables or digits) as the
            number has digits
@@ -205,15 +204,15 @@ def _first_match(numstr, rules):
            enclosed in parentheses must be less than the number of digits in the
            number
 
-    IF we end up with no matching rules then the rule set is not comprehensive
+    If we end up with no matching rules then the rule-set is not comprehensive
     to cover all possible numbers or there are missing entries in one of the
     lookup tables. Raise an exception and stop further processing.
 
     """
-    for rule in ifilter(lambda rule: rule.matches(numstr), rules):
+    for rule in filter(lambda rule: rule.matches(numstr), rules):
         return rule
 
-    raise Exception('Caould not find a suitable rule for the number %s' % numstr)
+    raise Exception('Could not find a suitable rule for the number %s' % numstr)
 
 def _pattern_match(pattern, numstr, order):
     """Return a mapping for variables given the numstr"""
