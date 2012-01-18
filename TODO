@@ -1,5 +1,10 @@
 This file contains notes to self, just so that I don't forget them later on.
 
+* Update RuleSyntax
+
+  Describe the new expansion '*'
+
+
 * Replace `print`s with `log`s.
 
   The idea is that logs will stay in the production code. They can be easily
@@ -12,11 +17,6 @@ This file contains notes to self, just so that I don't forget them later on.
 
   There's got to be a way to simplify the logic instead of dealing with three
   lists and mangling their indices.
-
-
-* Document the `_expand_body` function.
-
-  Probably should also make it a method
 
 
 * Implement the **literal string** with spaces for the `listparse` module
