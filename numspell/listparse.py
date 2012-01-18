@@ -172,9 +172,9 @@ class Body(object):
         def wrap_fn(wrapper, fn):
             return lambda x: wrapper(fn(x))
 
-        def repl_fn(m):
+        def repl_fn(match):
             fn = lambda token: meta[token.name + "~replace"](token.value)
-            wrappers = m.group(1).split(':')
+            wrappers = match.group(1).split(':')
             for w in wrappers[1:]:
                 fn = wrap_fn(meta[w], fn)
             self.format_list.append(fn)
