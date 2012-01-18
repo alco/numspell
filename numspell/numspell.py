@@ -1,6 +1,7 @@
 """A module for spelling integers!
 """
 
+import logging
 import re
 
 import listparse
@@ -10,13 +11,19 @@ from squash import squash
 class Speller(object):
     """The class which performs spelling numbers"""
 
-    def __init__(self, lang="en"):
+    def __init__(self, lang="en", debug=False):
         """Initialize the Speller instance with language code
 
         Arguments
             lang -- language code in ISO 639-1 format
 
         """
+        if debug:
+            log_level = logging.DEBUG
+        else:
+            log_level = logging.WARNING
+        logging.basicConfig(format="*** %(message)s", level=log_level)
+
         spelling_mod = "spelling_" + lang
         package = __import__("numspell", fromlist=[spelling_mod])
         module = getattr(package, spelling_mod)

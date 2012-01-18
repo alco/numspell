@@ -15,6 +15,11 @@ def discover_available_languages():
     return [x.group(1) for x in map(f, filenames) if x]
 
 def main():
+    DEBUG_DESCR = """
+Print all of the steps taken to produce the spelling for a given number. \
+Useful for debugging purposes and to get to know the algorithm behind \
+the process."""
+
     LANG_DESCR = """
 Language code in ISO 639-1 format. Default: en.
 
@@ -36,13 +41,15 @@ status code."""
                 formatter_class=FlexiFormatter)
     parser.add_argument('num', metavar='number', type=int,
             help="an integer to spell")
+    parser.add_argument('-d', '--debug', action='store_const',
+            const=True, default=False, help=DEBUG_DESCR)
     parser.add_argument('-l', '--lang', type=str, default='en',
             help=LANG_DESCR)
     parser.add_argument('-c', '--check', metavar='<spelling>', type=str,
             help=CHECK_DESCR)
     args = parser.parse_args()
 
-    speller = numspell.Speller(args.lang)
+    speller = numspell.Speller(args.lang, args.debug)
     if args.check:
         result = speller.check(args.num, args.check)
         if result:
