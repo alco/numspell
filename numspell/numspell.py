@@ -42,11 +42,6 @@ class Speller(object):
 
         self.META = hasattr(module, 'META') and module.META or {}
 
-        if 'order_separator' in self.META:
-            self.ORDER_SEP = self.META['order_separator']
-        else:
-            self.ORDER_SEP = ' '
-
     def spell(self, num):
         """Return the spelling of the given integer
 
@@ -64,36 +59,32 @@ class Speller(object):
         isnum = lambda x: type(x) is str and x.isdigit()
         isorder = lambda x: type(x) is int
 
-        tokens = self._parse_num(str(num))
-        ######print '1:', tokens
-        # remove multiple sequential orders
+        tokens = self._parse_num(num)
+        # Renumber orders
+        order = 0
+        for i in range(len(tokens)-1, -1, -1):
+            if isorder(tokens[i]):
+                order += 1
+                tokens[i] = order
         tokens = squash(isorder, tokens)
-        ##print '2:', tokens
+        logging.debug("Number decomposition:\n    %s\n", tokens)
+
         # distill tokens into a list of tuples with no whitespace or words
         processed_tokens = [(index, x) for index, x in enumerate(tokens)
                             if isnum(x) or isorder(x)]
         secondary_list = [x for index, x in processed_tokens]
-        ##print '        ||'
-        ##print '        \/'
-        ##print processed_tokens
-        ##print secondary_list
-        ##print '===='
         parts = tokens[:]
 
-        # prev_token = lambda i, l: l[i-1][1]
-
+        pass_no = 1
         for pass_ in self.PASSES:
-            lr = listparse.Parser(pass_, self.META)
-            ##print '>>>', pass_
-            ##print secondary_list
-            ##print lr.search(secondary_list)
-            ##print '***---***'
-            new_list, matches = lr.sub(secondary_list)
-            if not matches:
+            parser = listparse.Parser(pass_, self.META)
+            new_list, ranges = parser.sub(secondary_list)
+            if not ranges:
                 continue
-            for m in matches:
-                ##print 'Processing lists'
-                start, end = m
+
+            stored_list = secondary_list[:]
+            for r in ranges:
+                start, end = r
                 start_index = processed_tokens[start][0]
                 end_index = processed_tokens[end-1][0]
 
@@ -106,23 +97,19 @@ class Speller(object):
                 for i in range(start+1, len(processed_tokens)):
                     index, token = processed_tokens[i]
                     processed_tokens[i] = (index - (end_index - start_index), token)
-
-                ##print processed_tokens
-                ##print secondary_list
-                ##print parts
-                ##print '----------------------------'
-            ##print secondary_list
-            ##print '>>>___<<<'
+            logging.debug("Pass #%s:\n    %s\n    -> %s\n    -> %s\n", pass_no, stored_list, pass_, secondary_list)
+            pass_no += 1
+        if pass_no > 1:
+            logging.debug("After final pass:\n    %s\n", parts)
 
         for i, (index, token) in enumerate(processed_tokens):
-            ##print index, token
             if isnum(token):
                 parts[index] = self.NUMBERS[int(token)]
             elif isorder(token):
                 parts[index] = self.ORDERS[token]
-
-        ##print parts
         result = ''.join(parts).rstrip()
+
+        logging.debug("Final components:\n    %s\n", parts)
 
         # Finally, squash any sequence of whitespace into a single space
         return re.sub(r'\s+', ' ', result)
@@ -144,51 +131,56 @@ class Speller(object):
             return
         return result
 
-    def _parse_num(self, numstr, order=0):
-        num = int(numstr)
+    def _parse_num(self, num):
+        """Produce a spelling given a rule and a mapping of its vars"""
         if num == 0:
-            return ""
+            return []
 
+        numstr = str(num)
         if num in self.NUMBERS:
-            result = [numstr]
-        else:
-            rule = _first_match(numstr, self.RULES)
-            mapping = rule.bind(numstr, order)
-            result = _expand_body(rule.body, mapping, self._parse_num)
+            return [numstr]
 
-        return result + (order and [self.ORDER_SEP, order] or [])
+        rule = first_match(numstr, self.RULES)
+        body = rule.body.replace('}', '},').replace('{', ',{')
+        components = body.split(',')
 
-def _expand_body(body, mapping, callback):
-    """Produce a spelling given a rule and a mapping of its vars"""
-    ######print mapping
-    body = body.replace('}', '!}')
+        logging.debug("Body components:\n    %s", components)
 
-    result = []
-    for item in body.split('{'):
-        result.extend(item.split('}'))
-    result = filter(bool, result)
+        result = []
+        pattern = re.compile(r'{(.+?)}')
+        mapping = rule.bind(numstr)
+        for raw_token in components:
+            match = pattern.match(raw_token)
+            if not match:
+                result.append(raw_token)
+                continue
 
-    for raw_token in filter(lambda x: x.find('!') > 0, result):
-        token = raw_token[:-1]
-        order = 0
-        for char in token:
-            subst = mapping.get(char, char)
-            if type(subst) is list:
-                subst, order = subst
-            token = token.replace(char, str(subst))
-        index = result.index(raw_token)
-        spelling = callback(token, order)
-        if spelling:
-            ######print result
-            ######print spelling
-            ######print '***'
-            result = result[:index] + spelling + result[index+1:]
-        else:
-            result.pop(index)
+            token = match.group(1)
+            if token == '*':
+                result.append(0)
+            else:
+                new_num = int(''.join(mapping.get(x, x) for x in token))
+                result.extend(self._parse_num(new_num))
 
-    return result
+        return result
 
-def _first_match(numstr, rules):
+
+def rule_from_str(string):
+    """Return a new instance of a rule
+
+    The type of the rule is determined based on the string contents
+
+    """
+    pattern, body = [x.strip() for x in string.split('=')]
+    if pattern.find(')') > 0:
+        assert pattern.find('(') >= 0
+        return RecursiveRule(pattern, body)
+    if pattern.find('-') > 0:
+        return MultiRule(pattern, body)
+    return Rule(pattern, body)
+
+
+def first_match(numstr, rules):
     """Find the first matching rule for the given number
 
     This function only looks at the left-hand side of each rule -- the part
@@ -221,27 +213,12 @@ def _first_match(numstr, rules):
 
     raise Exception('Could not find a suitable rule for the number %s' % numstr)
 
-
-def rule_from_str(string):
-    """Return a new instance of a rule
-
-    The type of the rule is determined based on the string contents
-
-    """
-    pattern, body = [x.strip() for x in string.split('=')]
-    if pattern.find(')') > 0:
-        assert pattern.find('(') >= 0
-        return RecursiveRule(pattern, body)
-    if pattern.find('-') > 0:
-        return MultiRule(pattern, body)
-    return Rule(pattern, body)
-
 def resolve_bindings(pattern, numstr):
     """Return a dict with variable bindings obtained from numstr"""
     mapping = {}
     for (var, digit) in zip(pattern, numstr):
         if not var.isdigit():
-            mapping[var] = mapping.get(var, 0) * 10 + int(digit)
+            mapping[var] = mapping.get(var, "") + digit
     return mapping
 
 
@@ -260,7 +237,7 @@ class Rule(object):
         """Return True if the rule's pattern matches num"""
         return len(self.pattern) == len(num) and self._compare_digits(num)
 
-    def bind(self, numstr, order):
+    def bind(self, numstr):
         """Return a dict with variable bindings"""
         return resolve_bindings(self.pattern, numstr)
 
@@ -277,14 +254,14 @@ class RecursiveRule(Rule):
     def matches(self, num):
         return self._chopped_len() < len(num)
 
-    def bind(self, numstr, order):
+    def bind(self, numstr):
         def rsplit_index(s, index):
             return s[:-index], s[len(s)-index:]
 
         left, right = self.pattern[1:].split(')')
         lnum, rnum = rsplit_index(numstr, len(right))
         mapping = resolve_bindings(right, rnum)
-        mapping[left] = [lnum, order+1]
+        mapping[left] = lnum
         return mapping
 
     def _chopped_len(self):
@@ -303,7 +280,7 @@ class MultiRule(Rule):
     def matches(self, num):
         return len(num) in self.len_range and self._compare_digits(num)
 
-    def bind(self, numstr, order):
+    def bind(self, numstr):
         # Clone the leftmost variable a number of times so that the pattern
         # length becomes equal to len(numstr)
         pattern = (self.pattern[0] * (1 + len(numstr) - self.len_range[0])

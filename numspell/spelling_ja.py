@@ -7,7 +7,7 @@ ab = {a}十{b}
 1xx = {100}{x}
 axx = {a}{100}{x}
 axxx = {a}千{x}
-(a)xxxx = {a}{x}
+(a)xxxx = {a}{*}{x}
 """
 
 NUMBERS = {
@@ -32,7 +32,3 @@ ORDERS = [
     'decillion', 'undecillion', 'duodecillion', 'tredecillion',
     'quattuordecillion', 'quindecillion'
 ]
-
-META = {
-    'order_separator': ''
-    }

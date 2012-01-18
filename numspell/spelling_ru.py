@@ -4,7 +4,7 @@
 RULES = """
 ab = {a0} {b}
 axx = {a00} {x}
-(a)xxx = {a} {x}
+(a)xxx = {a} {*} {x}
 """
 
 NUMBERS = {

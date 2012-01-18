@@ -5,7 +5,7 @@ RULES = """
 ab = {a0} y {b}
 axx = {a00} {x}
 a--xxx = {a} {1000} {x}
-(a)xxxxxx = {a} {x}
+(a)xxxxxx = {a} {*} {x}
 """
 
 NUMBERS = {
