@@ -130,16 +130,16 @@ and implementation of the modules that **numspell** is comprised of. The
 documentation is also viewable online on the project's [wiki][1]. Here's a
 brief overview of the documentation files:
 
-* _DeveloperIntro.md_ describes the goals, design decisions and high-level
-  architecture of the project.
+* _Developer-Introduction.md_ describes the goals, design decisions and
+  high-level architecture of the project.
 
-* _SpellingAlgorithm.md_ outlines the steps of the spelling algorithm and
+* _Spelling-Algorithm.md_ outlines the steps of the spelling algorithm and
   explains how each step is implemented.
 
-* _RuleSyntax.md_ explains the syntax for defining rules by which a number is
+* _Rule-Syntax.md_ explains the syntax for defining rules by which a number is
   decomposed into logical elements.
 
-* _TemplateSyntax.md_ explains the template string syntax used by the
+* _Template-Syntax.md_ explains the template string syntax used by the
   **listparse** submodule. It allows to transform the logical elements of a
   number to adjust for possible exceptions and irregularities of a particular
   human language.

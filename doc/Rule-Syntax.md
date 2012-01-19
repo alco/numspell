@@ -236,4 +236,4 @@ is transformed into an empty string.
 The steps outlined above are ***not*** the exact steps of the spelling
 algorithm. The purpose of this document is to explain the rule syntax only. To
 learn the actual steps performed by the algorithm, take a look at the
-_SpellingAlgorithm.md_ file.
+[[Spelling Algorithm]] page.

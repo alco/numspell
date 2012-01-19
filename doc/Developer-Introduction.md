@@ -57,9 +57,9 @@ by a set of rules written using a simple syntax. The algorithm processes
 numbers by applying those rules and dealing with all the irregularities that
 any particular human language has.
 
-The steps comprising the whole spelling algorithm are described in the
-_SpellingAlgorithm.md_ file. The syntax used to define the rules of number
-decomposition is explained in the _RuleSyntax.md_ file.
+The steps comprising the whole spelling algorithm are described on the
+[[Spelling Algorithm]] page. The syntax used to define the rules of number
+decomposition is explained on the [[Rule Syntax]] page.
 
 
 ## Dealing With Irregularities and Exceptions ##
@@ -101,5 +101,5 @@ etc.
 
 The **listparse** submodule allows you to define such rules using a template
 string that will act upon a list and transform its elements according to those
-rules. See the submodule's docstring and the _TemplateSyntax.md_ file for the
+rules. See the submodule's docstring and the [[Template Syntax]] page for the
 detailed information on the subject.

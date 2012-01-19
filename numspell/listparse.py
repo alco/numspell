@@ -6,7 +6,7 @@ elements of a list with one new element obtained by substituting values of the
 elements into the template string.
 
 To learn more about the template string syntax, take a look at the file
-TemplateSyntax.md in the 'doc' directory.
+Template-Syntax.md in the 'doc' directory.
 
 """
 
