@@ -1,10 +1,17 @@
 This file contains notes to self, just so that I don't forget them later on.
 
+* Improve formatting of the spellnum's help message
+
+
 * Reimplement the whole thing using strings and re.sub instead of list
   processing
 
   The problem with lists is that tracking indices causes a lot of problems and
   code bloat. Incremental string replacement might be a better solution.
+
+  Moreover, by using regular expressions we could eliminate all code from the
+  spelling_* files to make language definitions portable among implementations
+  in different programming languages.
 
 
 * Implement the **literal string** with spaces for the `listparse` module
