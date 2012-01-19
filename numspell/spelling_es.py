@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Spanish rules and tables for the numspell module"""
 
+from spelling import isorder
+
+
 RULES = """
 ab = {a0} y {b}
 axx = {a00} {x}
@@ -69,25 +72,17 @@ ORDERS = [
 PASSES = """
 ^ 1 1000 = mil
 ^ 1 <order> = un {}
+<lookup> (1000) = {}
 <lookup> (<order>) = {}
 <order> = {:pl}
 """
 
-def _isorder(x):
-    return (x == '1000') or (type(x) is int)
-
-def _replace_order(x):
-    return (x == '1000') and NUMBERS[1000] or ORDERS[x]
-
-def _make_plural(x):
-    return x.replace('ón', 'ones')
-
 META = {
-    "order~find": _isorder,
-    "order~replace": _replace_order,
+    "order~find": isorder,
+    "order~replace": lambda x: ORDERS[x],
     "lookup~find": lambda x: x in _exceptions,
     "lookup~replace": lambda x: _exceptions[x],
-    "pl": _make_plural,
+    "pl": lambda x: x.replace('ón', 'ones'),
 }
 
 _exceptions = {

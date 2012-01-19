@@ -6,6 +6,7 @@ import re
 
 import listparse
 from squash import squash
+from spelling import isnum, isorder
 
 
 class Speller(object):
@@ -55,9 +56,6 @@ class Speller(object):
 
         if num == 0:
             return self.NUMBERS[0]
-
-        isnum = lambda x: type(x) is str and x.isdigit()
-        isorder = lambda x: type(x) is int
 
         tokens = self._parse_num(num)
         # Renumber orders
