@@ -79,6 +79,9 @@ class Speller(object):
                             if isnum(x) or isorder(x)]
         secondary_list = [x for index, x in processed_tokens]
         parts = tokens[:]
+        logging.debug("Processed: %s", processed_tokens)
+        logging.debug("Secondary: %s", secondary_list)
+        logging.debug("Component: %s", parts)
 
         pass_no = 1
         for pass_ in self.PASSES:
