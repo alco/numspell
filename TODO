@@ -1,10 +1,5 @@
 This file contains notes to self, just so that I don't forget them later on.
 
-* Update RuleSyntax
-
-  Describe the new expansion '*'
-
-
 * Reimplement the whole thing using strings and re.sub instead of list
   processing
 

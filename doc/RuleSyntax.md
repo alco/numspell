@@ -124,6 +124,10 @@ Every sequence of English letters or digits enclosed within braces (`{` and
 pair of braces and pass it through to the same algorithm", i.e. spell the
 number inside those braces.
 
+There is one special expansion called _order expansion_. It is denoted by the
+`{*}` token. It is mainly used in combination with a consuming pattern to
+produce the spelling of numbers above 999.
+
 
 ## Examples ##
 
@@ -131,7 +135,7 @@ Let's take a look at the rule set for the English language.
 
     ab = {a0}-{b}
     axx = {a} hundred {x}
-    (a)xxx = {a} {x}
+    (a)xxx = {a} {*} {x}
 
 That's all we need to define an English speller! Well, almost all. Of course,
 we will also need a lookup table for the numbers like _one_, _ten_, _twenty_,
@@ -164,34 +168,32 @@ Let's take the number **26** and trace the steps needed to obtain its spelling.
 The second rule is pretty straightforward as well. Using only the first two
 rules we can spell the first 1000 numbers: from 0 to 999.
 
-The third rule has a consuming pattern and thus it becomes a _recursive rule_.
-In a recursive rule the number of recursive invocations is remembered by the
-algorithm. This allows for spelling number of huge magnitudes.
+The third rule has a consuming pattern and its body contains an order
+expansions. Order expansions are useful for spelling numbers of large
+magnitude.
 
 Let's take a look at the steps required to spell the number **1200001**.
 
 1. Look the number up in the spell-table. No success.
 
-2. Find a matching rule for the number. It is the third one, `(a)xxx = {a}
-   {x}`.
+2. Find a matching rule for the number. It is the third one,
+   `(a)xxx = {a} {*} {x}`.
 
 3. Produce bindings for the pattern variables: `a = 1200`, `x = 1`.
 
-4. Expand the body: `{1200, 1} {1}`. The comma in the first expansion has been
-   put there for clarity. It represents the number of recursive invocations
-   that the algorithm stores automatically.
+4. Expand the body: `{1200} {*} {1}`. The special token `{*}` will be replaced
+   by a proper order later on.
 
 5. Repeat the steps for each of the expansions. The second expansion is
-   trivial. The matching rule for the first one is once again the recursive
-   rule `(a)xxx = {a} {x}`.
+   trivial. The matching rule for the first one is once again the third rule
+   `(a)xxx = {a} {*} {x}`.
 
-6. The number **1200** will expand to `{1, 2} {200}` and, eventually, the whole
-   body will become `{{1, 2} {2} hundred {0}, 1} {1}`.
+6. The number **1200** will expand to `{1} {*} {200}` and, eventually, the whole
+   body will become `{1} {*} {2} hundred {0} {*} {1}`.
 
 The final step is to get the values from the lookup tables and put them into
 the expanded body. Values for simple expansions are taken from the NUMBERS
-table, whereas values for recursive expansions (those with a comma in our
-notation) are taken from the ORDERS list.
+table. Values for order expansions are taken from the ORDERS list.
 
 In the English case, the NUMBERS table contains numbers 0—20, 30, 40, 50, 60,
 70, 80, and 90.
@@ -200,17 +202,24 @@ The ORDERS list looks like this:
 
     ORDERS = ['', 'thousand', 'million', 'billion', ...]
 
-As you might have already guessed, the number after the comma in the expansions
-above can be used as an index into the ORDERS list. Below you can see how each
-expansion is spelled out and how the spelling of the whole number is built up
-from the components.
+To pick the correct order for each occurrence of the `{*}` token, we simply
+number all those tokens from right to left. Thus, the rule body obtained in
+Step 6 will become:
 
-    {1, 2} {2} hundred {0}  -> one million two hundred
-    {the above, 1}          -> one million two hundred thousand
-    append {1} to the above -> one million two hundred thousand one
+    {1} *2* {2} hundred {0} *1* {1}
 
-So, the final spelling for the number **1200001** is _one million two hundred
-thousand one_.
+Now we can use each number between the stars (`*`) as an index into the ORDERS
+list. Each expansion is spelled individually, then the spelling of the whole
+number is built up from the components.
+
+    {1}              -> one
+    *2*              -> million
+    {2} hundred {0}  -> two hundred
+    *1*              -> thousand
+
+So, the final spelling for the number **1200001** is
+
+    one million two hundred thousand one
 
 ---
 
