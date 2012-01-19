@@ -1,5 +1,4 @@
-"""A module for spelling integers!
-"""
+"""numspell -- a module for spelling integers"""
 
 import logging
 import re
@@ -28,13 +27,14 @@ def to_list(list_or_str):
 
 
 class Speller(object):
-    """The class which performs spelling numbers"""
+    """The class which implements the number spelling"""
 
     def __init__(self, lang="en", debug=False):
-        """Initialize the Speller instance with language code
+        """Initialize the Speller instance with a language code
 
         Arguments
-            lang -- language code in ISO 639-1 format
+            lang  -- language code in ISO 639-1 format
+            debug -- if True then print debug info to stderr
 
         """
         setup_logging(debug)
@@ -54,16 +54,17 @@ class Speller(object):
         """Return the spelling of the given integer
 
         Arguments:
-          num   -- the number to spell
+          num   -- number to spell
 
         Return value:
-          A string with the num's spelling.
+          A string with num's spelling.
 
         """
 
         if num == 0:
             return self.NUMBERS[0]
 
+        # *** Pass 1. Apply rules to decompose the number ***
         tokens = self._parse_num(num)
         # Renumber orders
         order = 0
@@ -74,50 +75,16 @@ class Speller(object):
         tokens = squash(isorder, tokens)
         logging.debug("Number decomposition:\n    %s\n", tokens)
 
-        # distill tokens into a list of tuples with no whitespace or words
-        processed_tokens = [(index, x) for index, x in enumerate(tokens)
-                            if isnum(x) or isorder(x)]
-        secondary_list = [x for index, x in processed_tokens]
-        parts = tokens[:]
-        logging.debug("Processed: %s", processed_tokens)
-        logging.debug("Secondary: %s", secondary_list)
-        logging.debug("Component: %s", parts)
-
-        pass_no = 1
-        for pass_ in self.PASSES:
-            parser = listparse.Parser(pass_, self.META)
-            new_list, ranges = parser.sub(secondary_list)
-            if not ranges:
-                continue
-
-            stored_list = secondary_list[:]
-            for r in ranges:
-                start, end = r
-                start_index = processed_tokens[start][0]
-                end_index = processed_tokens[end-1][0]
-
-                processed_tokens[start:end] = [(-1, None)]
-
-                subst = [new_list[start]]
-                secondary_list[start:end] = subst
-                parts[start_index:end_index+1] = subst
-
-                for i in range(start+1, len(processed_tokens)):
-                    index, token = processed_tokens[i]
-                    processed_tokens[i] = (index - (end_index - start_index), token)
-            logging.debug("Pass #%s:\n    %s\n    -> %s\n    -> %s\n", pass_no, stored_list, pass_, secondary_list)
-            pass_no += 1
-        if pass_no > 1:
-            logging.debug("After final pass:\n    %s\n", parts)
-
-        for i, (index, token) in enumerate(processed_tokens):
+        # *** Pass 2. Apply list transformations ***
+        processed_tokens = apply_passes(tokens, self.PASSES, self.META)
+        for index, token in enumerate(processed_tokens):
             if isnum(token):
-                parts[index] = self.NUMBERS[int(token)]
+                processed_tokens[index] = self.NUMBERS[int(token)]
             elif isorder(token):
-                parts[index] = self.ORDERS[token]
-        result = ''.join(parts).rstrip()
+                processed_tokens[index] = self.ORDERS[token]
+        result = ''.join(processed_tokens).rstrip()
 
-        logging.debug("Final components:\n    %s\n", parts)
+        logging.debug("Final components:\n    %s\n", processed_tokens)
 
         # Finally, squash any sequence of whitespace into a single space
         return re.sub(r'\s+', ' ', result)
@@ -126,7 +93,7 @@ class Speller(object):
         """Check if the given spelling is correct
 
         Arguments:
-          num       -- a number to spell
+          num       -- number to spell
           spelling  -- num's spelling
 
         Return value:
@@ -140,7 +107,7 @@ class Speller(object):
         return result
 
     def _parse_num(self, num):
-        """Produce a spelling given a rule and a mapping of its vars"""
+        """Decompose num into components using self.RULES"""
         if num == 0:
             return []
 
@@ -176,7 +143,7 @@ class Speller(object):
 def rule_from_str(string):
     """Return a new instance of a rule
 
-    The type of the rule is determined based on the string contents
+    The type of the rule is determined based on the string contents.
 
     """
     pattern, body = [x.strip() for x in string.split('=')]
@@ -195,8 +162,8 @@ def first_match(numstr, rules):
     called 'pattern'. The rules are checked in order. The ones which do not
     match the number are discarded.
 
-    For a pattern to match a given number, it must comply with
-    the following rules:
+    For a pattern to match a given number, it must comply with the following
+    rules:
 
       a) if it doesn't contain parentheses:
 
@@ -208,8 +175,8 @@ def first_match(numstr, rules):
       b) if it contains parentheses:
 
          * the number of rightmost characters of the pattern which are not
-           enclosed in parentheses must be less than the number of digits in the
-           number
+           enclosed in parentheses must be less than the number of digits in
+           the number
 
     If we end up with no matching rules then the rule-set is not comprehensive
     to cover all possible numbers or there are missing entries in one of the
@@ -294,3 +261,48 @@ class MultiRule(Rule):
         pattern = (self.pattern[0] * (1 + len(numstr) - self.len_range[0])
                    + self.pattern[1:])
         return resolve_bindings(pattern, numstr)
+
+
+def apply_passes(tokens, passes, meta):
+    """Magic processing with index mangling
+
+    Returns a new list with processed tokens.
+
+    """
+    # distill tokens into a list of tuples with no whitespace or words
+    processed_tokens = [(index, x) for index, x in enumerate(tokens)
+                        if isnum(x) or isorder(x)]
+    secondary_list = [x for index, x in processed_tokens]
+    parts = tokens[:]
+    logging.debug("Processed: %s", processed_tokens)
+    logging.debug("Secondary: %s", secondary_list)
+    logging.debug("Component: %s", parts)
+
+    pass_no = 1
+    for pass_ in passes:
+        parser = listparse.Parser(pass_, meta)
+        new_list, ranges = parser.sub(secondary_list)
+        if not ranges:
+            continue
+
+        stored_list = secondary_list[:]
+        for r in ranges:
+            start, end = r
+            start_index = processed_tokens[start][0]
+            end_index = processed_tokens[end-1][0]
+
+            processed_tokens[start:end] = [(-1, None)]
+
+            subst = [new_list[start]]
+            secondary_list[start:end] = subst
+            parts[start_index:end_index+1] = subst
+
+            for i in range(start+1, len(processed_tokens)):
+                index, token = processed_tokens[i]
+                processed_tokens[i] = (index - (end_index - start_index), token)
+        logging.debug("Pass #%s:\n    %s\n    -> %s\n    -> %s\n", pass_no, stored_list, pass_, secondary_list)
+        pass_no += 1
+    if pass_no > 1:
+        logging.debug("After final pass:\n    %s\n", parts)
+
+    return parts
