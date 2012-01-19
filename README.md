@@ -21,12 +21,7 @@ A Python module for spelling numbers.
 
 From the user's point of view, **numspell** is a Python module with a single
 public class — the `Speller`. A convenience command-line tool called
-**spellnum** is distributed alongside the module. It is but a simple shell
-script which executes the command
-
-```shell
-$ python -m numspell
-```
+**spellnum** is included in the distribution.
 
 
 ## Command-Line Interface ##
@@ -37,18 +32,15 @@ Let the utility itself describe how it is supposed to be used.
 $ spellnum -h
 usage: spellnum [-hd] [--lang=LANG] [--check=<spelling>] <number>
 
-Spell a number in one of the available languages
-or check a user's spelling for correctness.
-
+Spell a number using one of the available languages or check a user-provided
+spelling for correctness.
 
 Positional arguments:
-
   number
       An integer to spell. It has to be a simple number without spaces or
       punctuation marks to separate thousands.
 
 Optional arguments:
-
   -h, --help
       Show this help message and exit.
 
@@ -126,15 +118,16 @@ API, take a look at its help:
 If, however, you would like to dive deeper and find out how you can add a new
 spelling language, port the spelling algorithm to another programming language
 or contribute to the project in some other way, take a look at developer
-documentation in the _doc_ directory.
+documentation in the _doc_ directory or view the online [wiki][1].
 
 
-## How To Contribute ##
+## Contributing ##
 
 The project will have a roadmap at some point in the future.
 
 The _doc_ directory contains developer documentation which describes the design
-and implementation of the modules that **numspell** is comprised of. Here's a
+and implementation of the modules that **numspell** is comprised of. The
+documentation is also viewable online on the project's [wiki][1]. Here's a
 brief overview of the documentation files:
 
 * _DeveloperIntro.md_ describes the goals, design decisions and high-level
@@ -152,7 +145,18 @@ brief overview of the documentation files:
   human language.
 
 
+## Contact Info ##
+
+Your comments and questions are most welcome. My name is Alex and I can be
+reached at alcosholik@gmail.com. You may also follow me on
+[GitHub](https://github.com/alco) and
+[Twitter](https://twitter.com/true_droid).
+
+
 ## License ##
 
 **numspell** is Copyright (c) 2012 Alexei Sholik. It is distributed under the
 terms of the MIT license. See the LICENSE file for the full license text.
+
+
+  [1]: https://github.com/alco/numspell/wiki
