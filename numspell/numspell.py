@@ -29,19 +29,15 @@ class Speller(object):
         package = __import__("numspell", fromlist=[spelling_mod])
         module = getattr(package, spelling_mod)
 
-        rules = filter(bool, (x.strip() for x in module.RULES.splitlines()))
-        self.RULES = [rule_from_str(x) for x in rules]
-
+        self.RULES = [rule_from_str(x) for x in list_from_str(module.RULES)]
         self.NUMBERS = module.NUMBERS
         self.ORDERS = module.ORDERS
-
-        if hasattr(module, 'PASSES'):
-            self.PASSES = filter(bool,
-                                (x.strip() for x in module.PASSES.splitlines()))
+        if hasattr(module, 'LIST_PASS'):
+            self.PASSES = list_from_str(module.LIST_PASS['passes'])
+            self.META = module.LIST_PASS['meta']
         else:
             self.PASSES = []
-
-        self.META = hasattr(module, 'META') and module.META or {}
+            self.META = {}
 
     def spell(self, num):
         """Return the spelling of the given integer
@@ -162,6 +158,9 @@ class Speller(object):
 
         return result
 
+
+def list_from_str(string):
+    return [x.strip() for x in string.splitlines() if x]
 
 def rule_from_str(string):
     """Return a new instance of a rule

@@ -84,3 +84,5 @@ META = {
     "pl_1": _make_plural_1,
     "pl_2": _make_plural_2,
 }
+
+LIST_PASS = { 'passes': PASSES, 'meta': META }

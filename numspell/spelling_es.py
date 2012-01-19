@@ -90,3 +90,5 @@ _exceptions = {
     '21': 'veintiún',
     '100': 'cien',
 }
+
+LIST_PASS = { 'passes': PASSES, 'meta': META }
