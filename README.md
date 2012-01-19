@@ -123,7 +123,8 @@ documentation in the _doc_ directory or view the online [wiki][1].
 
 ## Contributing ##
 
-The project will have a roadmap at some point in the future.
+The project will have a roadmap at some point in the future. For now, some of
+the tasks are outlined in the _TODO_ file.
 
 The _doc_ directory contains developer documentation which describes the design
 and implementation of the modules that **numspell** is comprised of. The
