@@ -3,6 +3,9 @@ This file contains notes to self, just so that I don't forget them later on.
 * Improve formatting of the spellnum's help message
 
 
+* Improve the debug info
+
+
 * Reimplement the whole thing using strings and re.sub instead of list
   processing
 
