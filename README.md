@@ -6,13 +6,13 @@ other words, it describes the desired functionality which is **NOT** implemented
 yet._
 
 _If you find it confusing, take a look at this short and very nicely written
-introduction to_ [Readme Driven Development][1] _by_ Tom Preston-Werner, _its
+introduction to_ [Readme Driven Development][0] _by_ Tom Preston-Werner, _its
 author and evangelist._
 
 _As soon as the contents of this README reflects the actual functionality that
 is available to the end user, this disclaimer will disappear._
 
-  [1]: http://tom.preston-werner.com/2010/08/23/readme-driven-development.html
+  [0]: http://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 
 numspell
 ========
