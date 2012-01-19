@@ -192,13 +192,13 @@ Let's take a look at the steps required to spell the number **1200001**.
    body will become `{1} {*} {2} hundred {0} {*} {1}`.
 
 The final step is to get the values from the lookup tables and put them into
-the expanded body. Values for simple expansions are taken from the NUMBERS
-table. Values for order expansions are taken from the ORDERS list.
+the expanded body. Values for simple expansions are taken from the `NUMBERS`
+table. Values for order expansions are taken from the `ORDERS` list.
 
-In the English case, the NUMBERS table contains numbers 0—20, 30, 40, 50, 60,
+In the English case, the `NUMBERS` table contains numbers 0—20, 30, 40, 50, 60,
 70, 80, and 90.
 
-The ORDERS list looks like this:
+The `ORDERS` list looks like this:
 
     ORDERS = ['', 'thousand', 'million', 'billion', ...]
 
@@ -208,7 +208,7 @@ Step 6 will become:
 
     {1} *2* {2} hundred {0} *1* {1}
 
-Now we can use each number between the stars (`*`) as an index into the ORDERS
+Now we can use each number between the stars (`*`) as an index into the `ORDERS`
 list. Each expansion is spelled individually, then the spelling of the whole
 number is built up from the components.
 

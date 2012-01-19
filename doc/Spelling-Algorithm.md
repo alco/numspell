@@ -4,7 +4,7 @@ The Spelling Algorithm
 On the highest level of abstraction, the spelling algorithm is a box with one
 input and one output.
 
-You feed an number to it and it returns a string with that number's spelling.
+You feed a number to it and it returns a string with that number's spelling.
 
 
 ## The Basic Outline ##
@@ -24,8 +24,8 @@ being performed:
 4. If the selected language definition contains list passes, apply them one by
    one to our list of number components.
 
-5. Spell out the remaining list elements by consulting with the NUMBERS table
-   and ORDERS list.
+5. Spell out the remaining list elements by consulting with the `NUMBERS` table
+   and `ORDERS` list.
 
 6. Join all the list elements into a string, trim it at both ends, remove any
    duplicate spaces and return the string. Finish.
@@ -39,7 +39,7 @@ components. Let's take a closer look at its workings.
 
 1. If the number is **0**, return an empty list. Finish.
 
-2. Look the number up in the NUMBERS table. If it's there, return a list with
+2. Look the number up in the `NUMBERS` table. If it's there, return a list with
    the number as its single element. Note that we only check if there is a
    spelling for the number, we're not actually using it yet. Finish.
 
