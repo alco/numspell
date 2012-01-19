@@ -5,18 +5,11 @@ This file contains notes to self, just so that I don't forget them later on.
   Describe the new expansion '*'
 
 
-* Replace `print`s with `log`s.
+* Reimplement the whole thing using strings and re.sub instead of list
+  processing
 
-  The idea is that logs will stay in the production code. They can be easily
-  switched on and off by the verbosity level setting.
-
-  Reference: `logging` module
-
-
-* Refactor how the passes are applied to the list of tokens.
-
-  There's got to be a way to simplify the logic instead of dealing with three
-  lists and mangling their indices.
+  The problem with lists is that tracking indices causes a lot of problems and
+  code bloat. Incremental string replacement might be a better solution.
 
 
 * Implement the **literal string** with spaces for the `listparse` module
