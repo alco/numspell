@@ -9,6 +9,24 @@ from squash import squash
 from spelling import isnum, isorder
 
 
+def setup_logging(debug):
+    if debug:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.WARNING
+    logging.basicConfig(format="*** %(message)s", level=log_level)
+
+def load_lang_module(lang):
+    spelling_mod = "spelling_" + lang
+    package = __import__("numspell", fromlist=[spelling_mod])
+    return getattr(package, spelling_mod)
+
+def to_list(list_or_str):
+    if type(list_or_str) is str:
+        return [x.strip() for x in list_or_str.splitlines() if x]
+    return list_or_str
+
+
 class Speller(object):
     """The class which performs spelling numbers"""
 
@@ -19,21 +37,14 @@ class Speller(object):
             lang -- language code in ISO 639-1 format
 
         """
-        if debug:
-            log_level = logging.DEBUG
-        else:
-            log_level = logging.WARNING
-        logging.basicConfig(format="*** %(message)s", level=log_level)
+        setup_logging(debug)
 
-        spelling_mod = "spelling_" + lang
-        package = __import__("numspell", fromlist=[spelling_mod])
-        module = getattr(package, spelling_mod)
-
-        self.RULES = [rule_from_str(x) for x in list_from_str(module.RULES)]
+        module = load_lang_module(lang)
+        self.RULES = [rule_from_str(x) for x in to_list(module.RULES)]
         self.NUMBERS = module.NUMBERS
         self.ORDERS = module.ORDERS
         if hasattr(module, 'LIST_PASS'):
-            self.PASSES = list_from_str(module.LIST_PASS['passes'])
+            self.PASSES = to_list(module.LIST_PASS['passes'])
             self.META = module.LIST_PASS['meta']
         else:
             self.PASSES = []
@@ -158,9 +169,6 @@ class Speller(object):
 
         return result
 
-
-def list_from_str(string):
-    return [x.strip() for x in string.splitlines() if x]
 
 def rule_from_str(string):
     """Return a new instance of a rule
