@@ -77,15 +77,18 @@ class Parser(object):
         self.pattern = Pattern(pattern_str, self.meta)
         self.body = Body(body_str, self.meta)
 
-    def search(self, list_):
+    def search(self, list_, key=None):
         """Return a Range of the first matching sequence in list_"""
-        return self.pattern.search(list_)
+        return self.pattern.search(list_, key)
 
-    def sub(self, list_):
+    def sub(self, list_, key=None):
         """Perform substitution on the given list
 
         Each sequence of elements matching the pattern defined in the template
         string will be replaced by exactly one element.
+
+        If the key argument is provided, then list_ items are expected to be
+        dicts.
 
         Returns a two-element tuple. The first element is a new list which is
         the result of processing list_. The second element is a list of tuples;
@@ -95,13 +98,18 @@ class Parser(object):
         result = list_[:]
         ranges = []
         while True:
-            m = self.search(result)
+            m = self.search(result, key)
             if not m:
                 break
 
             sub_range = (m.start + self.pattern.insets[0],
                          m.end + self.pattern.insets[1])
-            result[slice(*sub_range)] = [self.body.format(self.pattern.subs)]
+            replacement = self.body.format(self.pattern.subs)
+            if key:
+                tmp = dict(result[sub_range[1]-1])
+                tmp[key] = replacement
+                replacement = tmp
+            result[slice(*sub_range)] = [replacement]
             ranges.append(sub_range)
         return result, ranges
 
@@ -123,7 +131,7 @@ class Pattern(object):
         new_list = [None] * (index - self.offset) + self.tokens[start_index:]
         return new_list[:length]
 
-    def search(self, list_):
+    def search(self, list_, key=None):
         """Search for a sequence of elements matching the pattern
 
         Return a Range of the first sequence of matching elements.
@@ -136,6 +144,9 @@ class Pattern(object):
 
         # Run through list_ looking for a matching sequence of elements
         cmp_fn = lambda token, x: (token is None) or token.matches(x)
+        if key:
+            tmp = cmp_fn
+            cmp_fn = lambda token, x: tmp(token, x[key])
         for i in range(list_len - pattern_len + 1):
             if all(map(cmp_fn, self.padded_list(i, list_len), list_)):
                 return Range(i, pattern_len)

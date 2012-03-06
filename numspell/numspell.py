@@ -269,45 +269,51 @@ class MultiRule(Rule):
 
 
 def apply_passes(tokens, passes, meta):
-    """Magic processing with index mangling
+    """Apply passes one at a time to the list of tokens
+
+    Each token must either be a non-empty string or a space, or an int.
 
     Returns a new list with processed tokens.
 
     """
-    # distill tokens into a list of tuples with no whitespace or words
-    processed_tokens = [(index, x) for index, x in enumerate(tokens)
-                        if isnum(x) or isorder(x)]
-    secondary_list = [x for index, x in processed_tokens]
-    parts = tokens[:]
-    logging.debug("Processed: %s", processed_tokens)
-    logging.debug("Secondary: %s", secondary_list)
-    logging.debug("Component: %s", parts)
+
+    if not len(passes):
+        return tokens
+
+    # Check out contract
+    assert not filter(lambda x: not ((type(x) is str and (x.strip() or x == ' ')) or type(x) is int),
+                      tokens)
+
+    def filter_combo_tokens(tokens):
+        """Decompose the list of combo tokens back into atoms"""
+        strip_list = lambda list_: filter(bool, list_)
+        return reduce(lambda x, y: strip_list(x) + strip_list(y),
+                      [[tok['item'], tok['space']] for tok in tokens])
+
+    # A combo token is a dict with two keys:
+    #     item  -- the token itself
+    #     space -- a space or an empty string
+    combo_tokens = []
+    for i, tok in enumerate(tokens):
+        if tok == ' ':
+            combo_tokens[-1]['space'] = ' '
+        else:
+            combo_tokens.append({'item': tok, 'space': ''})
 
     pass_no = 1
     for pass_ in passes:
         parser = listparse.Parser(pass_, meta)
-        new_list, ranges = parser.sub(secondary_list)
-        if not ranges:
+        new_tokens, ranges = parser.sub(combo_tokens, key='item')
+        if not len(ranges):
+            # List left unchanged
             continue
 
-        stored_list = secondary_list[:]
-        for r in ranges:
-            start, end = r
-            start_index = processed_tokens[start][0]
-            end_index = processed_tokens[end-1][0]
-
-            processed_tokens[start:end] = [(-1, None)]
-
-            subst = [new_list[start]]
-            secondary_list[start:end] = subst
-            parts[start_index:end_index+1] = subst
-
-            for i in range(start+1, len(processed_tokens)):
-                index, token = processed_tokens[i]
-                processed_tokens[i] = (index - (end_index - start_index), token)
-        logging.debug("Pass #%s:\n    %s\n    -> %s\n    -> %s\n", pass_no, stored_list, pass_, secondary_list)
+        logging.debug("Pass #%s:\n    %s\n    -> %s\n    -> %s\n",
+                        pass_no, filter_combo_tokens(combo_tokens), pass_, filter_combo_tokens(new_tokens))
+        combo_tokens = new_tokens
         pass_no += 1
-    if pass_no > 1:
-        logging.debug("After final pass:\n    %s\n", parts)
 
-    return parts
+    result = filter_combo_tokens(combo_tokens)
+    logging.debug("After final pass:\n    %s\n", result)
+
+    return result
