@@ -4,7 +4,7 @@ import logging
 import re
 
 import listparse
-from squash import squash
+from squash import squash, squash_whitespace
 from spelling import isnum, isorder
 
 
@@ -66,13 +66,18 @@ class Speller(object):
 
         # *** Pass 1. Apply rules to decompose the number ***
         tokens = self._parse_num(num)
+
         # Renumber orders
         order = 0
         for i in range(len(tokens)-1, -1, -1):
             if isorder(tokens[i]):
                 order += 1
                 tokens[i] = order
+
+        # Squash adjacent orders leaving only the highest one
         tokens = squash(isorder, tokens)
+        # Squash adjacent whitespace
+        tokens = squash_whitespace(tokens)
         logging.debug("Number decomposition:\n    %s\n", tokens)
 
         # *** Pass 2. Apply list transformations ***

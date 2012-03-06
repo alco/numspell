@@ -1,4 +1,4 @@
-__all__ = ['squash']
+__all__ = ['squash', 'squash_whitespace']
 
 
 from operator import add, eq
@@ -56,4 +56,19 @@ def squash(predicate, list_):
             result[base+1:n+1] = []
         else:
             base = n
+    return result
+
+
+def squash_whitespace(list_):
+    """Squash any sequence of whitespace into a single space"""
+    tmp = list_[:]
+    result = []
+    while tmp:
+        head = tmp.pop(0)
+        tail = result[-1] if len(result) else None
+
+        if type(head) is str and (len(head) == 0 or (len(head.strip()) == 0 and tail == ' ')):
+            continue
+        result.append(head)
+
     return result
