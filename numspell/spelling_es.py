@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Spanish rules and tables for the numspell module"""
 
-from spelling import isorder
+from spelling import isorder, getorder
 
 
 RULES = """
@@ -79,7 +79,7 @@ PASSES = """
 
 META = {
     "order~find": isorder,
-    "order~replace": lambda x: ORDERS[x],
+    "order~replace": lambda x: ORDERS[getorder(x)],
     "lookup~find": lambda x: x in _exceptions,
     "lookup~replace": lambda x: _exceptions[x],
     "pl": lambda x: x.replace('ón', 'ones'),

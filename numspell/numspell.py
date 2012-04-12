@@ -5,7 +5,10 @@ import re
 
 import listparse
 from squash import squash, squash_whitespace
-from spelling import isnum, isorder
+from spelling import isnum, getnum, isorder, getorder, makeorder, isword, getword
+
+def isnull(x):
+    return x is None
 
 
 def setup_logging(debug):
@@ -70,9 +73,9 @@ class Speller(object):
         # Renumber orders
         order = 0
         for i in range(len(tokens)-1, -1, -1):
-            if isorder(tokens[i]):
+            if type(tokens[i]) is int:
                 order += 1
-                tokens[i] = order
+                tokens[i] = makeorder(order)
 
         # Squash adjacent orders leaving only the highest one
         tokens = squash(isorder, tokens)
@@ -82,11 +85,37 @@ class Speller(object):
 
         # *** Pass 2. Apply list transformations ***
         processed_tokens = apply_passes(tokens, self.PASSES, self.META)
-        for index, token in enumerate(processed_tokens):
+#        for index, token in enumerate(processed_tokens):
+#            if isnum(token):
+#                processed_tokens[index] = self.NUMBERS[getnum(token)]
+#            elif isorder(token):
+#                processed_tokens[index] = self.ORDERS[getorder(token)]
+
+        ###
+        length = len(processed_tokens)
+        i = 0
+        skipping_nulls = False
+        while i < length:
+            token = processed_tokens[i]
+            if isnull(token):
+                skipping_nulls = True
+
+            if isword(token):
+                token = getword(token)
+            elif skipping_nulls:
+                processed_tokens.pop(i)
+                length -= 1
+                continue
+
             if isnum(token):
-                processed_tokens[index] = self.NUMBERS[int(token)]
+                processed_tokens[i] = self.NUMBERS[getnum(token)]
             elif isorder(token):
-                processed_tokens[index] = self.ORDERS[token]
+                processed_tokens[i] = self.ORDERS[getorder(token)]
+            else:
+                processed_tokens[i] = token
+            skipping_nulls = False
+            i += 1
+        ###
         result = ''.join(processed_tokens).rstrip()
 
         logging.debug("Final components:\n    %s\n", processed_tokens)
@@ -276,44 +305,48 @@ def apply_passes(tokens, passes, meta):
     Returns a new list with processed tokens.
 
     """
+    def merge_tokens(tokens, distilled_tokens):
+        """Restores whitespace and punctuation between distilled_tokens
+
+        Null tokens are left unchanged
+        """
+        i = 0
+        new_tokens = []
+        for index, tok in enumerate(tokens):
+            if isnum(tok) or isorder(tok):
+                if distilled_tokens[i] is not None:
+                    new_tokens.append('<%s>' % distilled_tokens[i])
+                else:
+                    new_tokens.append(distilled_tokens[i])
+                i += 1
+            else:
+                new_tokens.append(tok)
+        return new_tokens
+
 
     if not len(passes):
         return tokens
 
-    # Check out contract
-    assert not filter(lambda x: not ((type(x) is str and (x.strip() or x == ' ')) or type(x) is int),
-                      tokens)
-
-    def filter_combo_tokens(tokens):
-        """Decompose the list of combo tokens back into atoms"""
-        strip_list = lambda list_: filter(bool, list_)
-        return reduce(lambda x, y: strip_list(x) + strip_list(y),
-                      [[tok['item'], tok['space']] for tok in tokens])
-
-    # A combo token is a dict with two keys:
-    #     item  -- the token itself
-    #     space -- a space or an empty string
-    combo_tokens = []
-    for i, tok in enumerate(tokens):
-        if tok == ' ':
-            combo_tokens[-1]['space'] = ' '
-        else:
-            combo_tokens.append({'item': tok, 'space': ''})
+    # distill tokens into a list of number and order tokens (removing whitespace and punctuation)
+    distilled_tokens = [x for x in tokens if isnum(x) or isorder(x)]
+    logging.debug("Distilled tokens:\n    %s", distilled_tokens)
 
     pass_no = 1
     for pass_ in passes:
         parser = listparse.Parser(pass_, meta)
-        new_tokens, ranges = parser.sub(combo_tokens, key='item')
+        new_tokens, ranges = parser.sub(distilled_tokens)
         if not len(ranges):
             # List left unchanged
             continue
 
+        assert len(new_tokens) == len(distilled_tokens)
+
         logging.debug("Pass #%s:\n    %s\n    -> %s\n    -> %s\n",
-                        pass_no, filter_combo_tokens(combo_tokens), pass_, filter_combo_tokens(new_tokens))
-        combo_tokens = new_tokens
+                        pass_no, distilled_tokens, pass_, new_tokens)
+        distilled_tokens = new_tokens
         pass_no += 1
 
-    result = filter_combo_tokens(combo_tokens)
+    result = merge_tokens(tokens, distilled_tokens)
     logging.debug("After final pass:\n    %s\n", result)
 
     return result

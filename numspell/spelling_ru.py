@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Russian rules and tables for the numspell module"""
 
-from spelling import isnum, isorder
+from spelling import isnum, getnum, isorder, getorder, makeorder
 
 
 RULES = """
@@ -65,10 +65,10 @@ PASSES = """
 """
 
 def _isthousand(x):
-    return x == 1
+    return x == makeorder(1)
 
 def _between_2_and_4(x):
-    return isnum(x) and 2 <= int(x) <= 4
+    return isnum(x) and 2 <= getnum(x) <= 4
 
 def _make_plural_1(order):
     return (order == 'тысяча') and 'тысячи' or order + 'а'
@@ -79,7 +79,7 @@ def _make_plural_2(order):
 META = {
     "thousand~find" : _isthousand,
     "order~find": isorder,
-    "order~replace": lambda x: ORDERS[x],
+    "order~replace": lambda x: ORDERS[getorder(x)],
     "2-4~find": _between_2_and_4,
     "pl_1": _make_plural_1,
     "pl_2": _make_plural_2,

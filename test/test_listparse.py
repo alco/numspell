@@ -194,12 +194,12 @@ class TestSubstitution(unittest.TestCase):
             "<lookup> <order> = {} {}",
             meta=meta,
             good_inputs=[
-                (['1', 1], (['un millón'], [(0, 2)])),
-                (['.', '21', 2], (['.', 'veintiún billón'], [(1, 3)])),
-                (['100', 'mil', '.'], (['cien mil', '.'], [(0, 2)])),
+                (['1', 1], ([None, 'un millón'], [(0, 2)])),
+                (['.', '21', 2], (['.', None, 'veintiún billón'], [(1, 3)])),
+                (['100', 'mil', '.'], ([None, 'cien mil', '.'], [(0, 2)])),
                 (['1', 1, '21', 2, '.'],
-                 (['un millón', 'veintiún billón', '.'],
-                  [(0, 2), (1, 3)])),
+                 ([None, 'un millón', None, 'veintiún billón', '.'],
+                  [(0, 2), (2, 4)])),
             ],
             bad_inputs=[
                 ['2', 1],
@@ -211,9 +211,9 @@ class TestSubstitution(unittest.TestCase):
             "^ <lookup> <order> = {:pl} {:pl_2}",
             meta=meta,
             good_inputs=[
-                (['1', 1], (['un .'], [(0, 2)])),
-                (['21', 'mil'], (['veintiún .'], [(0, 2)])),
-                (['100', 2, 'etc'], (['cien .', 'etc'], [(0, 2)])),
+                (['1', 1], ([None, 'un .'], [(0, 2)])),
+                (['21', 'mil'], ([None, 'veintiún .'], [(0, 2)])),
+                (['100', 2, 'etc'], ([None, 'cien .', 'etc'], [(0, 2)])),
             ],
             bad_inputs=[
                 ['', '1', 1],
@@ -226,12 +226,12 @@ class TestSubstitution(unittest.TestCase):
             "<lookup> <order> = {0} {1:pl:pl_2}",
             meta=meta,
             good_inputs=[
-                (['1', 1], (['un millonesa'], [(0, 2)])),
+                (['1', 1], ([None, 'un millonesa'], [(0, 2)])),
                 (['...', '21', 'mil'],
-                 (['...', 'veintiún .'], [(1, 3)])),
+                 (['...', None, 'veintiún .'], [(1, 3)])),
                 (['.', '1', 'mil', '...', '100', 1, 'etc'],
-                 (['.', 'un .', '...', 'cien millonesa', 'etc'],
-                  [(1, 3), (3, 5)])),
+                 (['.', None, 'un .', '...', None, 'cien millonesa', 'etc'],
+                  [(1, 3), (4, 6)])),
             ],
             bad_inputs=[
                 ['', '1', '', 1],
@@ -244,8 +244,8 @@ class TestSubstitution(unittest.TestCase):
             "^ x <order> = _ {0} {0:pl} {0:pl:pl_2}",
             meta=meta,
             good_inputs=[
-                (['x', 1], (['_ millón millones millonesa'], [(0, 2)])),
-                (['x', 'mil'], (['_ mil mil .'], [(0, 2)])),
+                (['x', 1], ([None, '_ millón millones millonesa'], [(0, 2)])),
+                (['x', 'mil'], ([None, '_ mil mil .'], [(0, 2)])),
             ],
             bad_inputs=[
                 ['', 'x', 1],
@@ -257,7 +257,7 @@ class TestSubstitution(unittest.TestCase):
             "^ <lookup> <gt_1> <order> = {0} {0:pl_2} {2} {1} {2:pl:pl_2}",
             meta=meta,
             good_inputs=[
-                (['1', '2', 1], (['un . millón dos millonesa'], [(0, 3)])),
+                (['1', '2', 1], ([None, None, 'un . millón dos millonesa'], [(0, 3)])),
             ])
 
         self.build_test(
@@ -265,7 +265,7 @@ class TestSubstitution(unittest.TestCase):
             meta=meta,
             good_inputs=[
                 (['100', '11', 'mil'],
-                 (['once mil cien cien .'], [(0, 3)])),
+                 ([None, None, 'once mil cien cien .'], [(0, 3)])),
             ])
 
     def test_combined(self):
@@ -273,9 +273,9 @@ class TestSubstitution(unittest.TestCase):
             "(<gt_1>) <order> <lookup> $ = {:pl} {}",
             meta=meta,
             good_inputs=[
-                (['2', 1, '1'], (['2', 'millones un'], [(1, 3)])),
+                (['2', 1, '1'], (['2', None, 'millones un'], [(1, 3)])),
                 (['.', '10', 'mil', '21'],
-                 (['.', '10', 'mil veintiún'], [(2, 4)])),
+                 (['.', '10', None, 'mil veintiún'], [(2, 4)])),
             ],
             bad_inputs=[
                 ['1', 1, '1'],
