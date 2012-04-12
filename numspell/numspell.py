@@ -85,37 +85,11 @@ class Speller(object):
 
         # *** Pass 2. Apply list transformations ***
         processed_tokens = apply_passes(tokens, self.PASSES, self.META)
-#        for index, token in enumerate(processed_tokens):
-#            if isnum(token):
-#                processed_tokens[index] = self.NUMBERS[getnum(token)]
-#            elif isorder(token):
-#                processed_tokens[index] = self.ORDERS[getorder(token)]
-
-        ###
-        length = len(processed_tokens)
-        i = 0
-        skipping_nulls = False
-        while i < length:
-            token = processed_tokens[i]
-            if isnull(token):
-                skipping_nulls = True
-
-            if isword(token):
-                token = getword(token)
-            elif skipping_nulls:
-                processed_tokens.pop(i)
-                length -= 1
-                continue
-
+        for index, token in enumerate(processed_tokens):
             if isnum(token):
-                processed_tokens[i] = self.NUMBERS[getnum(token)]
+                processed_tokens[index] = self.NUMBERS[getnum(token)]
             elif isorder(token):
-                processed_tokens[i] = self.ORDERS[getorder(token)]
-            else:
-                processed_tokens[i] = token
-            skipping_nulls = False
-            i += 1
-        ###
+                processed_tokens[index] = self.ORDERS[getorder(token)]
         result = ''.join(processed_tokens).rstrip()
 
         logging.debug("Final components:\n    %s\n", processed_tokens)
@@ -308,18 +282,18 @@ def apply_passes(tokens, passes, meta):
     def merge_tokens(tokens, distilled_tokens):
         """Restores whitespace and punctuation between distilled_tokens
 
-        Null tokens are left unchanged
+        Null tokens are removed at this stage
         """
         i = 0
         new_tokens = []
+        skip_next_whitespace = False
         for index, tok in enumerate(tokens):
             if isnum(tok) or isorder(tok):
-                if distilled_tokens[i] is not None:
-                    new_tokens.append('<%s>' % distilled_tokens[i])
-                else:
+                skip_next_whitespace = distilled_tokens[i] is None
+                if not skip_next_whitespace:
                     new_tokens.append(distilled_tokens[i])
                 i += 1
-            else:
+            elif not skip_next_whitespace:
                 new_tokens.append(tok)
         return new_tokens
 

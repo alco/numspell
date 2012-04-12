@@ -67,7 +67,7 @@ def squash_whitespace(list_):
         head = tmp.pop(0)
         tail = result[-1] if len(result) else None
 
-        if type(head) is str and (len(head) == 0 or (len(head.strip()) == 0 and tail == ' ')):
+        if len(head) == 0 or (len(head.strip()) == 0 and tail == ' '):
             continue
         result.append(head)
 
