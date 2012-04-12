@@ -4,11 +4,9 @@ import logging
 import re
 
 import listparse
+import spelling_parser
 from squash import squash, squash_whitespace
 from spelling import isnum, getnum, isorder, getorder, makeorder, isword, getword
-
-def isnull(x):
-    return x is None
 
 
 def setup_logging(debug):
@@ -19,14 +17,9 @@ def setup_logging(debug):
     logging.basicConfig(format="*** %(message)s", level=log_level)
 
 def load_lang_module(lang):
-    spelling_mod = "spelling_" + lang
-    package = __import__("numspell", fromlist=[spelling_mod])
-    return getattr(package, spelling_mod)
-
-def to_list(list_or_str):
-    if type(list_or_str) is str:
-        return [x.strip() for x in list_or_str.splitlines() if x]
-    return list_or_str
+    with open('numspell/%s.spelling' % lang) as fp:
+        spell_conf = fp.read()
+    return spelling_parser.parse_sections(spell_conf)
 
 
 class Speller(object):
@@ -43,9 +36,9 @@ class Speller(object):
         setup_logging(debug)
 
         module = load_lang_module(lang)
-        self.RULES = [rule_from_str(x) for x in to_list(module.RULES)]
-        self.NUMBERS = module.NUMBERS
-        self.ORDERS = module.ORDERS
+        self.RULES = [rule_from_str(x) for x in module["decompose"]]
+        self.NUMBERS = module["numbers"]
+        self.ORDERS = module["orders"]
         if hasattr(module, 'LIST_PASS'):
             self.PASSES = to_list(module.LIST_PASS['passes'])
             self.META = module.LIST_PASS['meta']
