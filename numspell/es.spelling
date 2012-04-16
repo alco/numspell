@@ -76,7 +76,14 @@ quindecillón
 <lookup> (1000) = {}
 <lookup> (<order>) = {}
 <order> = {:pl}
--
-<lookup> = 1|21|100
--
-:pl <x>ón = <x>ones
+%---
+%order: "\*(\d+)\*"
+%  <x> = $(orders[x])
+---
+lookup: "1|21|100"
+  1   = un
+  21  = veintiún
+  100 = cien
+---
+:pl
+  <x>ón = <x>ones
