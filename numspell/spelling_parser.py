@@ -1,4 +1,5 @@
 import re
+import rule
 
 class Spelling(object):
     def __init__(self, string):
@@ -14,16 +15,11 @@ def parse_numbers(lst):
     return numbers
 
 def parse_orders(lst):
-    orders = []
-    for line in lst:
-        if line == '*null*':
-            orders.append('')
-        else:
-            orders.append(line)
-    return orders
+    return lst
 
 def parse_decomp_rules(lst):
-    return lst
+    """Create a new Rule instance for each line in `lst`"""
+    return [rule.from_str(x) for x in lst]
 
 def parse_transform_rules(lst):
     return lst

@@ -36,15 +36,14 @@ class Speller(object):
         setup_logging(debug)
 
         module = load_lang_module(lang)
-        self.RULES = [rule_from_str(x) for x in module["decompose"]]
+        self.RULES = module["decompose"]
         self.NUMBERS = module["numbers"]
         self.ORDERS = module["orders"]
         if hasattr(module, 'LIST_PASS'):
             self.PASSES = to_list(module.LIST_PASS['passes'])
             self.META = module.LIST_PASS['meta']
         else:
-            self.PASSES = []
-            self.META = {}
+            self.PASSES = None
 
     def spell(self, num):
         """Return the spelling of the given integer
@@ -67,17 +66,23 @@ class Speller(object):
         order = 0
         for i in range(len(tokens)-1, -1, -1):
             if type(tokens[i]) is int:
-                order += 1
                 tokens[i] = makeorder(order)
+                order += 1
 
         # Squash adjacent orders leaving only the highest one
         tokens = squash(isorder, tokens)
         # Squash adjacent whitespace
         tokens = squash_whitespace(tokens)
+
         logging.debug("Number decomposition:\n    %s\n", tokens)
 
         # *** Pass 2. Apply list transformations ***
-        processed_tokens = apply_passes(tokens, self.PASSES, self.META)
+        if self.PASSES:
+            processed_tokens = apply_passes(tokens, self.PASSES, self.META)
+        else:
+            processed_tokens = tokens
+
+        # Perform final substitution from the NUMBERS and ORDERS tables
         for index, token in enumerate(processed_tokens):
             if isnum(token):
                 processed_tokens[index] = self.NUMBERS[getnum(token)]
@@ -108,7 +113,7 @@ class Speller(object):
         return result
 
     def _parse_num(self, num):
-        """Decompose num into components using self.RULES"""
+        """Decompose num into components using RULES for decomposition"""
         if num == 0:
             return []
 
@@ -117,8 +122,7 @@ class Speller(object):
             return [numstr]
 
         rule = first_match(numstr, self.RULES)
-        body = rule.body.replace('}', '},').replace('{', ',{')
-        components = body.split(',')
+        components = rule.body.replace('}', '},').replace('{', ',{').split(',')
 
         logging.debug("Body components:\n    %s", components)
 
@@ -135,25 +139,10 @@ class Speller(object):
             if token == '*':
                 result.append(0)
             else:
-                new_num = int(''.join(mapping.get(x, x) for x in token))
-                result.extend(self._parse_num(new_num))
+                sub_num = int(''.join(mapping.get(x, x) for x in token))
+                result.extend(self._parse_num(sub_num))
 
         return result
-
-
-def rule_from_str(string):
-    """Return a new instance of a rule
-
-    The type of the rule is determined based on the string contents.
-
-    """
-    pattern, body = [x.strip() for x in string.split('=')]
-    if pattern.find(')') > 0:
-        assert pattern.find('(') >= 0
-        return RecursiveRule(pattern, body)
-    if pattern.find('-') > 0:
-        return MultiRule(pattern, body)
-    return Rule(pattern, body)
 
 
 def first_match(numstr, rules):
@@ -170,6 +159,7 @@ def first_match(numstr, rules):
 
          * it has the same number of characters (variables or digits) as the
            number has digits
+
          * each of the its digits (if it has any) has to match exactly with the
            corresponding digits of the number
 
@@ -188,80 +178,6 @@ def first_match(numstr, rules):
         return rule
 
     raise Exception('Could not find a suitable rule for the number %s' % numstr)
-
-def resolve_bindings(pattern, numstr):
-    """Return a dict with variable bindings obtained from numstr"""
-    mapping = {}
-    for (var, digit) in zip(pattern, numstr):
-        if not var.isdigit():
-            mapping[var] = mapping.get(var, "") + digit
-    return mapping
-
-
-class Rule(object):
-    """The base class for different rule types
-
-    Implements the common functionality for all rule types.
-
-    """
-
-    def __init__(self, pattern, body):
-        self.pattern = pattern
-        self.body = body
-
-    def matches(self, num):
-        """Return True if the rule's pattern matches num"""
-        return len(self.pattern) == len(num) and self._compare_digits(num)
-
-    def bind(self, numstr):
-        """Return a dict with variable bindings"""
-        return resolve_bindings(self.pattern, numstr)
-
-    def _compare_digits(self, num):
-        for (char, digit) in zip(self.pattern, num):
-            if char.isdigit() and char != digit:
-                return False
-        return True
-
-
-class RecursiveRule(Rule):
-    """A rule is called recursive if its pattern contains parentheses"""
-
-    def matches(self, num):
-        return self._chopped_len() < len(num)
-
-    def bind(self, numstr):
-        def rsplit_index(s, index):
-            return s[:-index], s[len(s)-index:]
-
-        left, right = self.pattern[1:].split(')')
-        lnum, rnum = rsplit_index(numstr, len(right))
-        mapping = resolve_bindings(right, rnum)
-        mapping[left] = lnum
-        return mapping
-
-    def _chopped_len(self):
-        return len(self.pattern) - self.pattern.rindex(')') - 1
-
-
-class MultiRule(Rule):
-    """A rule is called a multi-rule if its pattern has at least one dash"""
-
-    def __init__(self, pattern, body):
-        Rule.__init__(self, pattern, body)
-        dash_count = pattern.count('-')
-        self.len_range = range(len(pattern) - dash_count, len(pattern) + 1)
-        self.pattern = pattern.replace('-', '')
-
-    def matches(self, num):
-        return len(num) in self.len_range and self._compare_digits(num)
-
-    def bind(self, numstr):
-        # Clone the leftmost variable a number of times so that the pattern
-        # length becomes equal to len(numstr)
-        pattern = (self.pattern[0] * (1 + len(numstr) - self.len_range[0])
-                   + self.pattern[1:])
-        return resolve_bindings(pattern, numstr)
 
 
 def apply_passes(tokens, passes, meta):
@@ -289,10 +205,6 @@ def apply_passes(tokens, passes, meta):
             elif not skip_next_whitespace:
                 new_tokens.append(tok)
         return new_tokens
-
-
-    if not len(passes):
-        return tokens
 
     # distill tokens into a list of number and order tokens (removing whitespace and punctuation)
     distilled_tokens = [x for x in tokens if isnum(x) or isorder(x)]
