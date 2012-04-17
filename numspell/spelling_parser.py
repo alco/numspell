@@ -2,18 +2,80 @@ import re
 import rule
 
 
+class Clause(object):
+    def __init__(self, string):
+        """docstring for __init__"""
+        left, right = [x.strip() for x in string.split('=')]
+        self.pattern = left
+        self.body = right
+
+        # 1. Ensure that the pattern contains at most one var
+        var_re = re.compile(r'<(\w+?)>')
+        assert len(var_re.findall(self.pattern)) <= 1
+
+        # 2. Ensure that if the pattern contains a var, the body
+        #    contains the same var
+        match = var_re.search(self.pattern)
+        if match:
+            name = match.group(1)
+            assert len(var_re.findall(self.body)) == 1
+            assert var_re.search(self.body).group(1) == name
+        else:
+            assert len(var_re.findall(self.body)) == 0
+
+        self.var_re = var_re
+
+    def match(self, string):
+        """Returns a replacement for the string if it matches the pattern
+
+        Otherwise, returns None
+
+        """
+        match = self.var_re.search(self.pattern)
+        if match:
+            # Find out which part of the string should be assigned
+            # to the var
+            new_pat = self.var_re.sub('(.*)', self.pattern)
+            nm = re.match(new_pat, string)
+            if nm:
+                return self.var_re.sub(nm.group(1), self.body)
+        elif string == self.pattern:
+            return self.body
+
+
 class Predicate(object):
-    def __init__(self, name, value, table):
+    def __init__(self, name, pattern, table):
         self.name = name
-        self.value = value
+        self.pattern = pattern
         self.table = table
         self.clauses = []
 
     def add_clause(self, line):
-        self.clauses.append(line)
+        clause = Clause(line)
+        self.clauses.append(clause)
+
+    def match(self, string):
+        if not string:
+            return None
+        #print 'PATTERN = %s' % self.pattern
+        #print '%s MATCH TO %s =' % (self.name, string)
+        #print '\t%s' % re.match(self.pattern, string)
+        if string:
+            return re.match(self.pattern, string)
+
+    def sub(self, string):
+        #print 'DID ENTER PREDICATE %s SUB' % self.name
+        if self.table:
+            match = re.match(self.pattern, string)
+            contents = match.group(1)
+            return self.table[int(contents)]
+        else:
+            for clause in self.clauses:
+                repl = clause.match(string)
+                if repl: return repl
 
     def __repr__(self):
-        return '<%s: "%s" %s\t%s>' % (self.name, self.value, self.table, self.clauses)
+        return '<%s: "%s" %s\t%s>' % (self.name, self.pattern, self.table, self.clauses)
 
 
 class Modifier(object):
@@ -23,7 +85,13 @@ class Modifier(object):
         self.clauses = []
 
     def add_clause(self, line):
-        self.clauses.append(line)
+        clause = Clause(line)
+        self.clauses.append(clause)
+
+    def sub(self, string):
+        for clause in self.clauses:
+            repl = clause.match(string)
+            if repl: return repl
 
     def __repr__(self):
         return '<%s>' % ([':%s %s' % (self.name, x) for x in self.clauses])
@@ -55,11 +123,11 @@ def parse_transform_rules(lst):
     PARSING_PREDICATE = 1
     PARSING_MODIFIER  = 2
 
-    pred_re = re.compile(r'^(\w+):\s*"(.+)"(?:\s+\*(\w+)\*)?$')
+    pred_re = re.compile(r'^([^:]+):\s*"(.+)"(?:\s+\*(\w+)\*)?$')
     mod_re = re.compile(r'^:(\w+)$')
 
-    predicates = []
-    modifiers = []
+    predicates = {}
+    modifiers = {}
 
     pred = None
     mod = None
@@ -71,14 +139,14 @@ def parse_transform_rules(lst):
         if match:
             state = PARSING_PREDICATE
             pred = Predicate(*match.groups())
-            predicates.append(pred)
+            predicates[pred.name] = pred
             continue
 
         match = mod_re.match(line)
         if match:
             state = PARSING_MODIFIER
             mod = Modifier(match.group(1))
-            modifiers.append(mod)
+            modifiers[mod.name] = mod
             continue
 
         if state == PARSING_PREDICATE:
@@ -92,10 +160,11 @@ def parse_transform_rules(lst):
             else:
                 state = NORMAL
 
-    print predicates
-    print modifiers
-
-    return lst
+    return {
+        'rules': rules,
+        'predicates': predicates,
+        'modifiers': modifiers
+    }
 
 def parse_user_transform(lst):
     return lst

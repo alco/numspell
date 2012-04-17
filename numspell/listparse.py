@@ -61,7 +61,7 @@ class Parser(object):
 
     """
 
-    def __init__(self, template, meta=None):
+    def __init__(self, template, pred=None, mod=None):
         """Initialize the instance with a template string
 
         Arguments:
@@ -73,9 +73,10 @@ class Parser(object):
         """
         pattern_str, body_str = [x.strip() for x in template.split('=')]
 
-        self.meta = meta or {}
-        self.pattern = Pattern(pattern_str, self.meta)
-        self.body = Body(body_str, self.meta)
+        self.predicates = pred or {}
+        self.modifiers = mod or {}
+        self.pattern = Pattern(pattern_str, self.predicates)
+        self.body = Body(body_str, self.predicates, self.modifiers)
 
     def search(self, list_):
         """Return a Range of the first matching sequence in list_"""
@@ -111,13 +112,13 @@ class Parser(object):
 class Pattern(object):
     """Encapsulates a list of tokens for matching"""
 
-    def __init__(self, pattern, meta):
+    def __init__(self, pattern, predicates):
         self.tokens = []        # tokens to match against
         self.subs = []          # substitutions (tokens with values)
         self.offset = 0         # will be set to 1 if pattern has the ^ anchor
         self.insets = (0, 0)    # a bias applied to the range of substitution
         self.length = 0
-        self._build(pattern, meta)
+        self._build(pattern, predicates)
 
     def padded_list(self, index, length):
         """Return a list of tokens padded with None values at the beginning"""
@@ -142,7 +143,7 @@ class Pattern(object):
             if all(map(cmp_fn, self.padded_list(i, list_len), list_)):
                 return Range(i, pattern_len)
 
-    def _build(self, pattern, meta):
+    def _build(self, pattern, predicates):
         """Build the 'tokens' and 'subs' lists"""
         elements = re.split(r'\s+', pattern)
         insets = [0, 0]
@@ -150,7 +151,7 @@ class Pattern(object):
         isliteral = lambda token: type(token) is not MatcherToken
 
         for elem in elements:
-            token, isphantom = parse_token(elem, meta)
+            token, isphantom = parse_token(elem, predicates)
             if isphantom:
                 if left_side:
                     insets[0] += 1
@@ -170,15 +171,15 @@ class Pattern(object):
 
 class Body(object):
     """The body defines a replacement for a matching sequence of elements"""
-    def __init__(self, body, meta):
+    def __init__(self, body, predicates, modifiers):
         def wrap_fn(wrapper, fn):
             return lambda x: wrapper(fn(x))
 
         def repl_fn(match):
-            fn = lambda token: meta[token.name + "~replace"](token.value)
+            fn = lambda token: predicates[token.name].sub(token.value)
             wrappers = match.group(1).split(':')
             for w in wrappers[1:]:
-                fn = wrap_fn(meta[w], fn)
+                fn = wrap_fn(modifiers[w].sub, fn)
             self.format_list.append(fn)
 
             index_str = wrappers[0]
@@ -238,7 +239,7 @@ class MatcherToken(object):
         return self.fn(obj)
 
 
-def parse_token(string, meta, phantom=False):
+def parse_token(string, predicates, phantom=False):
     """Determine the type of the token in string
 
     Return a tuple with the token and a phantom flag
@@ -251,13 +252,13 @@ def parse_token(string, meta, phantom=False):
     # Now check for phantoms
     m = re.match(r'^\((.+?)\)$', string)
     if m:
-        return parse_token(m.group(1), meta, phantom=True)
+        return parse_token(m.group(1), predicates, phantom=True)
 
-    # The rest of tokens
+    # The rest of the tokens
     m = re.match(r'^<(.+?)>$', string)
     if m:
         name = m.group(1)
-        fn = meta[name + "~find"]
+        fn = predicates[name].match
         token = MatcherToken(fn, name)
     else:
         token = LiteralToken(string)

@@ -6,7 +6,7 @@ import re
 import listparse
 import spelling_parser
 from squash import squash, squash_whitespace
-from spelling import isnum, getnum, isorder, getorder, makeorder, isword, getword
+from spelling import isnum, getnum, isorder, getorder, makeorder
 
 
 def setup_logging(debug):
@@ -39,11 +39,11 @@ class Speller(object):
         self.RULES = module["decompose"]
         self.NUMBERS = module["numbers"]
         self.ORDERS = module["orders"]
-        if hasattr(module, 'LIST_PASS'):
-            self.PASSES = to_list(module.LIST_PASS['passes'])
-            self.META = module.LIST_PASS['meta']
-        else:
-            self.PASSES = None
+
+        # populate lang_module.predicates with globally available preds
+        self.lang_module = module
+        if 'transform' in self.lang_module:
+            self.lang_module['transform']['predicates']['order'] = spelling_parser.Predicate('order', r'^\*(\d+)\*$', self.ORDERS)
 
     def spell(self, num):
         """Return the spelling of the given integer
@@ -77,8 +77,8 @@ class Speller(object):
         logging.debug("Number decomposition:\n    %s\n", tokens)
 
         # *** Pass 2. Apply list transformations ***
-        if self.PASSES:
-            processed_tokens = apply_passes(tokens, self.PASSES, self.META)
+        if 'transform' in self.lang_module:
+            processed_tokens = apply_passes(tokens, self.lang_module['transform'])
         else:
             processed_tokens = tokens
 
@@ -180,7 +180,7 @@ def first_match(numstr, rules):
     raise Exception('Could not find a suitable rule for the number %s' % numstr)
 
 
-def apply_passes(tokens, passes, meta):
+def apply_passes(tokens, lang_module):
     """Apply passes one at a time to the list of tokens
 
     Each token must either be a non-empty string or a space, or an int.
@@ -210,9 +210,12 @@ def apply_passes(tokens, passes, meta):
     distilled_tokens = [x for x in tokens if isnum(x) or isorder(x)]
     logging.debug("Distilled tokens:\n    %s", distilled_tokens)
 
+    passes = lang_module['rules']
+    preds = lang_module['predicates']
+    mods = lang_module['modifiers']
     pass_no = 1
     for pass_ in passes:
-        parser = listparse.Parser(pass_, meta)
+        parser = listparse.Parser(pass_, preds, mods)
         new_tokens, ranges = parser.sub(distilled_tokens)
         if not len(ranges):
             # List left unchanged
