@@ -61,7 +61,7 @@ class Parser(object):
 
     """
 
-    def __init__(self, template, meta=None):
+    def __init__(self, template, pred=None, mod=None):
         """Initialize the instance with a template string
 
         Arguments:
@@ -73,22 +73,20 @@ class Parser(object):
         """
         pattern_str, body_str = [x.strip() for x in template.split('=')]
 
-        self.meta = meta or {}
-        self.pattern = Pattern(pattern_str, self.meta)
-        self.body = Body(body_str, self.meta)
+        self.predicates = pred or {}
+        self.modifiers = mod or {}
+        self.pattern = Pattern(pattern_str, self.predicates)
+        self.body = Body(body_str, self.predicates, self.modifiers)
 
-    def search(self, list_, key=None):
+    def search(self, list_):
         """Return a Range of the first matching sequence in list_"""
-        return self.pattern.search(list_, key)
+        return self.pattern.search(list_)
 
-    def sub(self, list_, key=None):
+    def sub(self, list_):
         """Perform substitution on the given list
 
         Each sequence of elements matching the pattern defined in the template
         string will be replaced by exactly one element.
-
-        If the key argument is provided, then list_ items are expected to be
-        dicts.
 
         Returns a two-element tuple. The first element is a new list which is
         the result of processing list_. The second element is a list of tuples;
@@ -98,18 +96,15 @@ class Parser(object):
         result = list_[:]
         ranges = []
         while True:
-            m = self.search(result, key)
+            m = self.search(result)
             if not m:
                 break
 
             sub_range = (m.start + self.pattern.insets[0],
                          m.end + self.pattern.insets[1])
+            sublen = sub_range[1] - sub_range[0]
             replacement = self.body.format(self.pattern.subs)
-            if key:
-                tmp = dict(result[sub_range[1]-1])
-                tmp[key] = replacement
-                replacement = tmp
-            result[slice(*sub_range)] = [replacement]
+            result[slice(*sub_range)] = [None] * (sublen - 1) + [replacement]
             ranges.append(sub_range)
         return result, ranges
 
@@ -117,13 +112,13 @@ class Parser(object):
 class Pattern(object):
     """Encapsulates a list of tokens for matching"""
 
-    def __init__(self, pattern, meta):
+    def __init__(self, pattern, predicates):
         self.tokens = []        # tokens to match against
         self.subs = []          # substitutions (tokens with values)
         self.offset = 0         # will be set to 1 if pattern has the ^ anchor
         self.insets = (0, 0)    # a bias applied to the range of substitution
         self.length = 0
-        self._build(pattern, meta)
+        self._build(pattern, predicates)
 
     def padded_list(self, index, length):
         """Return a list of tokens padded with None values at the beginning"""
@@ -131,7 +126,7 @@ class Pattern(object):
         new_list = [None] * (index - self.offset) + self.tokens[start_index:]
         return new_list[:length]
 
-    def search(self, list_, key=None):
+    def search(self, list_):
         """Search for a sequence of elements matching the pattern
 
         Return a Range of the first sequence of matching elements.
@@ -144,14 +139,11 @@ class Pattern(object):
 
         # Run through list_ looking for a matching sequence of elements
         cmp_fn = lambda token, x: (token is None) or token.matches(x)
-        if key:
-            tmp = cmp_fn
-            cmp_fn = lambda token, x: tmp(token, x[key])
         for i in range(list_len - pattern_len + 1):
             if all(map(cmp_fn, self.padded_list(i, list_len), list_)):
                 return Range(i, pattern_len)
 
-    def _build(self, pattern, meta):
+    def _build(self, pattern, predicates):
         """Build the 'tokens' and 'subs' lists"""
         elements = re.split(r'\s+', pattern)
         insets = [0, 0]
@@ -159,7 +151,7 @@ class Pattern(object):
         isliteral = lambda token: type(token) is not MatcherToken
 
         for elem in elements:
-            token, isphantom = parse_token(elem, meta)
+            token, isphantom = parse_token(elem, predicates)
             if isphantom:
                 if left_side:
                     insets[0] += 1
@@ -179,15 +171,15 @@ class Pattern(object):
 
 class Body(object):
     """The body defines a replacement for a matching sequence of elements"""
-    def __init__(self, body, meta):
+    def __init__(self, body, predicates, modifiers):
         def wrap_fn(wrapper, fn):
             return lambda x: wrapper(fn(x))
 
         def repl_fn(match):
-            fn = lambda token: meta[token.name + "~replace"](token.value)
+            fn = lambda token: predicates[token.name].sub(token.value)
             wrappers = match.group(1).split(':')
             for w in wrappers[1:]:
-                fn = wrap_fn(meta[w], fn)
+                fn = wrap_fn(modifiers[w].sub, fn)
             self.format_list.append(fn)
 
             index_str = wrappers[0]
@@ -247,7 +239,7 @@ class MatcherToken(object):
         return self.fn(obj)
 
 
-def parse_token(string, meta, phantom=False):
+def parse_token(string, predicates, phantom=False):
     """Determine the type of the token in string
 
     Return a tuple with the token and a phantom flag
@@ -260,13 +252,13 @@ def parse_token(string, meta, phantom=False):
     # Now check for phantoms
     m = re.match(r'^\((.+?)\)$', string)
     if m:
-        return parse_token(m.group(1), meta, phantom=True)
+        return parse_token(m.group(1), predicates, phantom=True)
 
-    # The rest of tokens
+    # The rest of the tokens
     m = re.match(r'^<(.+?)>$', string)
     if m:
         name = m.group(1)
-        fn = meta[name + "~find"]
+        fn = predicates[name].match
         token = MatcherToken(fn, name)
     else:
         token = LiteralToken(string)

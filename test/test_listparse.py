@@ -3,10 +3,51 @@
 
 import unittest
 from numspell import listparse
+from numspell import spelling_parser
+
 
 
 ORDERS = ['', 'millón', 'billón', 'trillón']
 NUMBERS = { 2: 'dos', 11: 'once', 90: 'noventa' }
+
+config = """
+[decompose]
+a = {a}
+
+[numbers]
+2 dos
+11 once
+90 noventa
+
+[orders]
+millón
+billón
+trillón
+
+[transform]
+---
+lookup: "1|21|100"
+  1   = un
+  21  = veintiún
+  100 = cien
+
+gt_1: "[2-9]|[1-9][0-9]"
+  2 = dos
+  11 = once
+  90 = noventa
+---
+:pl
+  <x>ón = <x>ones
+
+:pl_2
+  millones = millonesa
+  <x> = .
+"""
+
+lang_module = spelling_parser.parse_sections(config)
+lang_module['transform']['predicates']['order'] = spelling_parser.Predicate('order', r'{(\d+)}', lang_module['orders'])
+lang_module = lang_module['transform']
+
 
 lookup = {
     1: 'un',
@@ -30,8 +71,9 @@ meta = {
 
 
 class TestSearch(unittest.TestCase):
-    def build_test(self, template, meta=None, good_inputs=[], bad_inputs=[]):
-        parser = listparse.Parser(template, meta)
+    def build_test(self, template, transform=None, good_inputs=[], bad_inputs=[]):
+        transform = transform or {'predicates': {}, 'modifiers': {}}
+        parser = listparse.Parser(template, transform['predicates'], transform['modifiers'])
 
         for list_, span in good_inputs:
             self.assertEqual(span, parser.search(list_).span)
@@ -96,24 +138,23 @@ class TestSearch(unittest.TestCase):
 
     def test_matcher(self):
         self.build_test("<lookup> <order> = ",
-                        meta=meta,
+                        transform=lang_module,
                         good_inputs=[
-                            (['1', 100], (0, 2)),
-                            (['whatever', '21', 'mil'], (1, 3)),
-                            (['100', 1, 'blah'], (0, 2)),
+                            (['1', '{100}'], (0, 2)),
+                            (['whatever', '21', '{0}'], (1, 3)),
+                            (['100', '{1}', 'blah'], (0, 2)),
                         ],
                         bad_inputs=[
-                            ['2', 1],
+                            ['2', '{1}'],
                             ['', 'mil'],
                         ])
         self.build_test("^ 1 <order> = ",
-                        meta=meta,
+                        transform=lang_module,
                         good_inputs=[
-                            (['1', 100], (0, 2)),
-                            (['1', 'mil'], (0, 2)),
+                            (['1', '{100}'], (0, 2)),
                         ],
                         bad_inputs=[
-                            ['', '1', 1],
+                            ['', '1', '{1}'],
                             ['', 'mil'],
                             ['1', '100'],
                         ])
@@ -128,27 +169,27 @@ class TestSearch(unittest.TestCase):
                         bad_inputs=[
                             ['check'],
                             ['1', '2', 'check', ' 10 '],
-                            [1, 2, 'check', 10],
+                            ['{1}', '{2}', 'check', '{10}'],
                         ])
 
     def test_combined(self):
         self.build_test("^ (1) and <order> $ = ",
-                        meta=meta,
+                        transform=lang_module,
                         good_inputs=[
-                            (['1', 'and', 1], (0, 3)),
-                            (['1', 'and', 'mil'], (0, 3)),
+                            (['1', 'and', '{1}'], (0, 3)),
                         ],
                         bad_inputs=[
                             ['1', 'and', '1'],
-                            ['', '1', 'and', 10],
-                            ['1', 'and', 1, ''],
+                            ['', '1', 'and', '{10}'],
+                            ['1', 'and', '{1}', ''],
                             ['x', '1', 'and', 'mil', 'x'],
                         ])
 
 
 class TestSubstitution(unittest.TestCase):
-    def build_test(self, template, meta=None, good_inputs=[], bad_inputs=[]):
-        parser = listparse.Parser(template, meta)
+    def build_test(self, template, transform=None, good_inputs=[], bad_inputs=[]):
+        transform = transform or {'predicates': {}, 'modifiers': {}}
+        parser = listparse.Parser(template, transform['predicates'], transform['modifiers'])
 
         for list_, result in good_inputs:
             self.assertEqual(result, parser.sub(list_))
@@ -169,21 +210,21 @@ class TestSubstitution(unittest.TestCase):
 
         self.build_test(
             "(<gt_1>) <order> = {:pl}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['.', '2', 1, '.'], (['.', '2', 'millones', '.'], [(2, 3)])),
-                (['10', 2], (['10', 'billones'], [(1, 2)])),
+                (['.', '2', '{0}', '.'], (['.', '2', 'millones', '.'], [(2, 3)])),
+                (['10', '{1}'], (['10', 'billones'], [(1, 2)])),
             ],
             bad_inputs=[
-                ['1', 1],
+                ['1', '{1}'],
                 ['0', 'mil'],
             ])
 
         self.build_test(
             "^ (<gt_1>) <order> = {:pl}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['2', 1], (['2', 'millones'], [(1, 2)])),
+                (['2', '{0}'], (['2', 'millones'], [(1, 2)])),
             ],
             bad_inputs=[
                 ['', '2', 'mil'],
@@ -192,31 +233,31 @@ class TestSubstitution(unittest.TestCase):
     def test_matcher(self):
         self.build_test(
             "<lookup> <order> = {} {}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['1', 1], (['un millón'], [(0, 2)])),
-                (['.', '21', 2], (['.', 'veintiún billón'], [(1, 3)])),
-                (['100', 'mil', '.'], (['cien mil', '.'], [(0, 2)])),
-                (['1', 1, '21', 2, '.'],
-                 (['un millón', 'veintiún billón', '.'],
-                  [(0, 2), (1, 3)])),
+                (['1', '{0}'], ([None, 'un millón'], [(0, 2)])),
+                (['.', '21', '{1}'], (['.', None, 'veintiún billón'], [(1, 3)])),
+                (['100', '{0}', '.'], ([None, 'cien millón', '.'], [(0, 2)])),
+                (['1', '{0}', '21', '{1}', '.'],
+                 ([None, 'un millón', None, 'veintiún billón', '.'],
+                  [(0, 2), (2, 4)])),
             ],
             bad_inputs=[
-                ['2', 1],
-                ['1', '', 1],
+                ['2', '{1}'],
+                ['1', '', '{1}'],
             ])
 
     def test_modifier(self):
         self.build_test(
             "^ <lookup> <order> = {:pl} {:pl_2}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['1', 1], (['un .'], [(0, 2)])),
-                (['21', 'mil'], (['veintiún .'], [(0, 2)])),
-                (['100', 2, 'etc'], (['cien .', 'etc'], [(0, 2)])),
+                (['1', '{1}'], ([None, 'un .'], [(0, 2)])),
+                (['21', '{0}'], ([None, 'veintiún .'], [(0, 2)])),
+                (['100', '{2}', 'etc'], ([None, 'cien .', 'etc'], [(0, 2)])),
             ],
             bad_inputs=[
-                ['', '1', 1],
+                ['', '1', '{1}'],
                 ['21', '1'],
                 [' 1 ', 'mil'],
                 ['mil', '1'],
@@ -224,17 +265,17 @@ class TestSubstitution(unittest.TestCase):
 
         self.build_test(
             "<lookup> <order> = {0} {1:pl:pl_2}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['1', 1], (['un millonesa'], [(0, 2)])),
-                (['...', '21', 'mil'],
-                 (['...', 'veintiún .'], [(1, 3)])),
-                (['.', '1', 'mil', '...', '100', 1, 'etc'],
-                 (['.', 'un .', '...', 'cien millonesa', 'etc'],
-                  [(1, 3), (3, 5)])),
+                (['1', '{0}'], ([None, 'un millonesa'], [(0, 2)])),
+                (['...', '21', '{1}'],
+                 (['...', None, 'veintiún .'], [(1, 3)])),
+                (['.', '1', '{1}', '...', '100', '{0}', 'etc'],
+                 (['.', None, 'un .', '...', None, 'cien millonesa', 'etc'],
+                  [(1, 3), (4, 6)])),
             ],
             bad_inputs=[
-                ['', '1', '', 1],
+                ['', '1', '', '{1}'],
                 ['21', '1'],
                 [' 1 ', 'mil'],
                 ['mil', '1'],
@@ -242,58 +283,57 @@ class TestSubstitution(unittest.TestCase):
 
         self.build_test(
             "^ x <order> = _ {0} {0:pl} {0:pl:pl_2}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['x', 1], (['_ millón millones millonesa'], [(0, 2)])),
-                (['x', 'mil'], (['_ mil mil .'], [(0, 2)])),
+                (['x', '{0}'], ([None, '_ millón millones millonesa'], [(0, 2)])),
             ],
             bad_inputs=[
-                ['', 'x', 1],
+                ['', 'x', '{1}'],
                 ['x', '1'],
-                [1],
+                ['{1}'],
             ])
 
         self.build_test(
             "^ <lookup> <gt_1> <order> = {0} {0:pl_2} {2} {1} {2:pl:pl_2}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['1', '2', 1], (['un . millón dos millonesa'], [(0, 3)])),
+                (['1', '2', '{0}'], ([None, None, 'un . millón dos millonesa'], [(0, 3)])),
             ])
 
         self.build_test(
             "^ <lookup> <gt_1> <order> = {1} {2:pl} {0} {0} {2:pl:pl_2}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['100', '11', 'mil'],
-                 (['once mil cien cien .'], [(0, 3)])),
+                (['100', '11', '{1}'],
+                 ([None, None, 'once billones cien cien .'], [(0, 3)])),
             ])
 
     def test_combined(self):
         self.build_test(
             "(<gt_1>) <order> <lookup> $ = {:pl} {}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['2', 1, '1'], (['2', 'millones un'], [(1, 3)])),
-                (['.', '10', 'mil', '21'],
-                 (['.', '10', 'mil veintiún'], [(2, 4)])),
+                (['2', '{0}', '1'], (['2', None, 'millones un'], [(1, 3)])),
+                (['.', '10', '{0}', '21'],
+                 (['.', '10', None, 'millones veintiún'], [(2, 4)])),
             ],
             bad_inputs=[
-                ['1', 1, '1'],
-                ['2', 1, '1', ''],
+                ['1', '{1}', '1'],
+                ['2', '{1}', '1', ''],
             ])
 
         self.build_test(
             "(1) <order> (<order>) = {:pl:pl_2}",
-            meta=meta,
+            transform=lang_module,
             good_inputs=[
-                (['.', '1', 1, 2, '1', 2, 1, '1', 'mil', 'mil', '.'],
-                 (['.', '1', 'millonesa', 2, '1', '.', 1, '1', '.', 'mil', '.'],
+                (['.', '1', '{0}', '{2}', '1', '{2}', '{1}', '1', '{1}', '{1}', '.'],
+                 (['.', '1', 'millonesa', '{2}', '1', '.', '{1}', '1', '.', '{1}', '.'],
                   [(2, 3), (5, 6), (8, 9)])),
             ],
             bad_inputs=[
-                ['1', 1, '1'],
+                ['1', '{0}', '1'],
                 ['', '1', 'mil'],
-                [1, 1],
+                ['{0}', '{0}'],
             ])
 
 
