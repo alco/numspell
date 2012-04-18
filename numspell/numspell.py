@@ -17,7 +17,7 @@ def setup_logging(debug):
     logging.basicConfig(format="*** %(message)s", level=log_level)
 
 def load_lang_module(lang):
-    with open('numspell/%s.spelling' % lang) as fp:
+    with open('numspell/lang/%s.spelling' % lang) as fp:
         spell_conf = fp.read()
     return spelling_parser.parse_sections(spell_conf)
 
