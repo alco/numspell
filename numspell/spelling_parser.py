@@ -18,8 +18,8 @@ class Clause(object):
         match = var_re.search(self.pattern)
         if match:
             name = match.group(1)
-            assert len(var_re.findall(self.body)) == 1
-            assert var_re.search(self.body).group(1) == name
+            if len(var_re.findall(self.body)) == 1:
+                assert var_re.search(self.body).group(1) == name
         else:
             assert len(var_re.findall(self.body)) == 0
 
@@ -95,6 +95,7 @@ class Modifier(object):
         for clause in self.clauses:
             repl = clause.match(string)
             if repl: return repl
+        return string
 
     def __repr__(self):
         return '<%s>' % ([':%s %s' % (self.name, x) for x in self.clauses])
@@ -188,7 +189,7 @@ def parse_sections(string):
     section_re = re.compile(r"^\[(\w+)\]$", flags = re.MULTILINE)
 
     # Get a list of sections, each followed by its contents
-    section_list = filter(bool, re.split(section_re, string))
+    section_list = filter(bool, [x.strip() for x in re.split(section_re, string)])
     for i in range(0, len(section_list), 2):
         name = section_list[i]
         contents = [x.strip() for x in section_list[i+1].split('\n')]
