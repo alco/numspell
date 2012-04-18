@@ -46,7 +46,10 @@ class Clause(object):
 class Predicate(object):
     def __init__(self, name, pattern, table):
         self.name = name
-        self.pattern = pattern
+
+        if pattern.find('(') < 0:
+            pattern = '(%s)' % pattern
+        self.pattern = '^%s$' % pattern
         self.table = table
         self.clauses = []
 

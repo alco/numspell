@@ -43,7 +43,7 @@ class Speller(object):
         # populate lang_module.predicates with globally available preds
         self.lang_module = module
         if 'transform' in self.lang_module:
-            self.lang_module['transform']['predicates']['order'] = spelling_parser.Predicate('order', r'^\*(\d+)\*$', self.ORDERS)
+            self.lang_module['transform']['predicates']['order'] = spelling_parser.Predicate('order', r'{(\d+)}', self.ORDERS)
 
     def spell(self, num):
         """Return the spelling of the given integer

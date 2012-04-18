@@ -76,11 +76,8 @@ quindecillón
 <lookup> (1000) = {}
 <lookup> (<order>) = {}
 <order> = {:pl}
-%---
-%order: "\*(\d+)\*"
-%  <x> = $(orders[x])
 ---
-lookup: "^(1|21|100)$"
+lookup: "1|21|100"
   1   = un
   21  = veintiún
   100 = cien
