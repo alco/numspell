@@ -3,6 +3,25 @@ numspell
 
 A Python module for spelling numbers.
 
+Here's a quick demo of what it can do.
+
+```sh
+$ ./spellnum 321
+three hundred twenty-one
+
+$ ./spellnum 10500090
+ten million five hundred thousand ninety
+
+$ ./spellnum -les 3002
+tres mil dos
+
+$ ./spellnum -lru 90532701000
+девяносто миллиардов пятьсот тридцать два миллиона семьсот одна тысяча
+
+$ ./spellnum -lja 34101
+三万四千百一    # hiragana spelling coming later
+```
+
 From the user's point of view, **numspell** is a Python module with a single
 public class — the `Speller`. A convenience command-line tool called
 **spellnum** is included in the distribution.
