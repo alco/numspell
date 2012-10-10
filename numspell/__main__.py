@@ -9,9 +9,9 @@ from argparse_formatter import FlexiFormatter
 
 
 def discover_available_languages():
-    lang_re = re.compile(r'^spelling_([a-z]{2}).py$')
+    lang_re = re.compile(r'^([a-z]{2}).spelling$')
     f = lambda x: lang_re.match(x)
-    filenames = os.listdir(os.path.dirname(sys.argv[0]))
+    filenames = os.listdir(os.path.join(os.path.dirname(sys.argv[0]), 'lang'))
     return [x.group(1) for x in map(f, filenames) if x]
 
 def main():
