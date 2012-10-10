@@ -3,7 +3,7 @@ import unittest
 import numspell
 
 
-LANGUAGES = ['en', 'es', 'ja', 'ru']
+LANGUAGES = ['en', 'es', 'ja', 'ru', 'de']
 
 
 def build_setup(lang):

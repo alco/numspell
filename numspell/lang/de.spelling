@@ -1,11 +1,12 @@
 [decompose]
+     1 = eins
     ab = {b}und{a0}
    axx = {a}hundert{x}
 (a)xxx = {a}{*}{x}
 
 [numbers]
  0 null
- 1 eins
+ 1 ein
  2 zwei
  3 drei
  4 vier
