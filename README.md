@@ -8,6 +8,10 @@ public class — the `Speller`. A convenience command-line tool called
 **spellnum** is included in the distribution.
 
 
+## Installation ##
+
+Clone this repository and run (as root) `python setup.py install`.
+
 ## Command-Line Interface ##
 
 Let the utility itself describe how it is supposed to be used.
