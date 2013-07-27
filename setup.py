@@ -10,5 +10,5 @@ setup(name='Numspell',
       url='https://github.com/alco/numspell',
       license="MIT",
       packages=['numspell'],
-      data_files=[('/usr/bin', ['spellnum'])],
+      scripts=['spellnum'],
      )
